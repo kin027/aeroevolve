@@ -21,6 +21,8 @@ class SuspendedFlightRoutesAnalyzer:
 
     # Method to read all CSVs and store dataframes in attributes
     def read_and_store_csvs(self):
+        # T-100 fields are DepPerformed, Passengers, UniqueCarrier, UniqueCarrierName, Origin, OriginCityName, OriginCountryName, Dest, DestCityName, DestCountryName, Year, Month, Class
+
         # Use Path to get all CSVs in self.folder_path
         folder_path = Path(self.folder_path)
 
@@ -42,12 +44,10 @@ class SuspendedFlightRoutesAnalyzer:
         # Concatenate the list into self.all_past_T100_df
         self.all_past_T100_df = pd.concat(temp_dfs, ignore_index = True)
 
-        print(f"Shape: {self.all_past_T100_df.shape}")
-
     # Method to get and validate airport code from user
     def get_origin_airport(self):
         # Ask user for airport code
-        origin_airport = simpledialog.askstring(title = TITLE, prompt = "Enter a three-character IATA airport code\nfor an airport in the U.S.:")
+        origin_airport = simpledialog.askstring(title = TITLE, prompt = "Enter a three-character IATA airport code:")
 
         if origin_airport:
             # Convert user input to uppercase
@@ -66,8 +66,6 @@ class SuspendedFlightRoutesAnalyzer:
             # Call read_and_store_csvs method
             self.read_and_store_csvs()
 
-            print("CSVs read")
-
             # Get a set of valid origin airport codes
             valid_origin_airports = set(self.all_past_T100_df["ORIGIN"].unique())
 
@@ -79,8 +77,8 @@ class SuspendedFlightRoutesAnalyzer:
                 return True
             else: # Invalid airport
                 # Display message box for error message
-                messagebox.showerror(message = "Airport is nonexistent, does not have scheduled commercial air service, or "
-                                               "never had service to the U.S. since 1990", title = TITLE)
+                messagebox.showerror(message = "Airport is nonexistent or never had scheduled commercial passenger "
+                                               "air service to the U.S. since 1990.", title = TITLE)
                 return False
         else:
             return False
@@ -93,19 +91,17 @@ class SuspendedFlightRoutesAnalyzer:
             # Drop NA values
             df_list[n].dropna(inplace = True)
 
-            # Filter T-100 so that DEPARTURES_SCHEDULED > 0 (exclude diversions, etc.)
-            df_list[n] = df_list[n][df_list[n]["DEPARTURES_SCHEDULED"] >= 10]
-
-            # Filter T-100 so that CLASS is "F" (Scheduled Passenger/ Cargo Service F) (exclude non-scheduled flights)
-            df_list[n] = df_list[n][df_list[n]["CLASS"] == "F"]
+            # Filter T-100 so that DEPARTURES_PERFORMED > 4 (at least once a week frequency on average, exclude diversions, etc.)
+            df_list[n] = df_list[n][df_list[n]["DEPARTURES_PERFORMED"] > 4]
 
             # Filter T-100 so that PASSENGERS > 0 (exclude cargo)
             df_list[n] = df_list[n][df_list[n]["PASSENGERS"] > 0]
 
+            # Filter T-100 so that CLASS is "F" (Scheduled Passenger/ Cargo Service F) (exclude non-scheduled flights)
+            df_list[n] = df_list[n][df_list[n]["CLASS"] == "F"]
+
             # Filter T-100 so that ORIGIN is self.origin_airport
             df_list[n] = df_list[n][df_list[n]["ORIGIN"] == self.origin_airport]
-
-            #
 
         # Reassign cleaned dfs to attributes
         self.most_recent_T100_df = df_list[0]
@@ -114,9 +110,13 @@ class SuspendedFlightRoutesAnalyzer:
         # Filter all_past_T100_df so that DEST values are not DEST values in most_recent_T100_df
         self.all_past_T100_df = self.all_past_T100_df[~self.all_past_T100_df["DEST"].isin(self.most_recent_T100_df["DEST"])]
 
-        self.all_past_T100_df.sort_values("YEAR", ascending = False, inplace = True)
+        # Sort all_past_T100_df by recency in descending order
+        self.all_past_T100_df.sort_values(by = ["YEAR", "MONTH"], ascending = [False, False], inplace = True)
 
-        print(self.all_past_T100_df[["UNIQUE_CARRIER", "DEST", "DEST_CITY_NAME"]].drop_duplicates().head(30))
+        # Keep only the top-most row for a given destination (the most recent month of operation)
+        self.all_past_T100_df.drop_duplicates(subset = "DEST", inplace = True)
+
+        print(self.all_past_T100_df[["UNIQUE_CARRIER", "DEST", "DEST_CITY_NAME", "MONTH", "YEAR"]].head(30))
 
 
     # Method to run all previous methods
