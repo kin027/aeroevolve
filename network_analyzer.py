@@ -5,10 +5,10 @@ from pathlib import Path
 import plotly.express as px
 import calendar
 
-TITLE = "Suspended Flight Routes"
+TITLE = "AeroEvolve"
 
 
-class SuspendedFlightRoutesAnalyzer:
+class NetworkAnalyzer:
     def __init__(self, t100_folder_path, airports_csv_path):
         # Set file path attributes
         self.folder_path = t100_folder_path
@@ -19,11 +19,13 @@ class SuspendedFlightRoutesAnalyzer:
         self.window.withdraw()
 
         # Attributes to be filled out in later methods
+        self.airline_filter_selection_box = None
+        self.airline_filter_selection = None
+        self.airline = None
         self.origin_airport = None
         self.origin_airport_lat = None
         self.origin_airport_lon = None
-        self.most_recent_T100_df = pd.DataFrame()
-        self.all_past_T100_df = pd.DataFrame()
+        self.T100_df = pd.DataFrame()
         self.airports_df = pd.DataFrame()
 
     # Method to read all CSVs and store dataframes in attributes
@@ -39,23 +41,25 @@ class SuspendedFlightRoutesAnalyzer:
         # Sort that list into alphabetical order
         files.sort()
 
-        # Last item (index -1) in list is most recent T-100 CSV, read it
-        self.most_recent_T100_df = pd.read_csv(folder_path / files[-1])
-
-        # Remove last item from the list
-        files.pop()
-
         # Read each remaining T-100 CSV and store each into an array
         temp_dfs = [pd.read_csv(folder_path / file) for file in files]
 
-        # Concatenate the list into self.all_past_T100_df
-        self.all_past_T100_df = pd.concat(temp_dfs, ignore_index=True)
+        # Concatenate the list into self.T100_df
+        self.T100_df = pd.concat(temp_dfs, ignore_index=True)
 
         # Read airports.csv
         self.airports_df = pd.read_csv(self.airports_csv_path)
 
+    # Method for button clicked when user selects an airline
+    def button_clicked(self):
+        # Read the selected airline and store it in self.airline
+        self.airline = self.airline_filter_selection.get()
+
+        # Destroy the box
+        self.airline_filter_selection_box.destroy()
+
     # Method to get and validate airport code from user
-    def get_origin_airport(self):
+    def get_user_selections(self):
         # Ask user for airport code
         origin_airport = simpledialog.askstring(
             title=TITLE, prompt="Enter a three-character IATA airport code:"
@@ -86,7 +90,7 @@ class SuspendedFlightRoutesAnalyzer:
             self.read_and_store_csvs()
 
             # Get a set of valid origin airport codes
-            valid_origin_airports = set(self.all_past_T100_df["ORIGIN"].unique())
+            valid_origin_airports = set(self.T100_df["ORIGIN"].unique())
 
             # Validate user-entered origin airport
             if origin_airport in valid_origin_airports:  # Valid airport
@@ -115,60 +119,88 @@ class SuspendedFlightRoutesAnalyzer:
             return False
 
     def analyze_suspended_routes(self):
-        # Clean both T-100 table dfs
-        df_list = [self.most_recent_T100_df, self.all_past_T100_df]
+        # Clean self.T100_df
 
-        for n in range(0, 2):
-            # Drop NA values
-            df_list[n] = df_list[n].dropna()
+        # Drop NA values
+        self.T100_df = self.T100_df.dropna()
 
-            # Filter T-100 so that DEPARTURES_PERFORMED > 4 (at least once a week frequency on average, exclude diversions, etc.)
-            df_list[n] = df_list[n][df_list[n]["DEPARTURES_PERFORMED"] > 4]
+        # Filter T-100 so that DEPARTURES_PERFORMED > 4 (at least once a week frequency on average, exclude diversions, etc.)
+        self.T100_df = self.T100_df[self.T100_df["DEPARTURES_PERFORMED"] > 4]
 
-            # Filter T-100 so that PASSENGERS > 0 (exclude cargo)
-            df_list[n] = df_list[n][df_list[n]["PASSENGERS"] > 0]
+        # Filter T-100 so that PASSENGERS > 0 (exclude cargo)
+        self.T100_df = self.T100_df[self.T100_df["PASSENGERS"] > 0]
 
-            # Filter T-100 so that CLASS is "F" (Scheduled Passenger/ Cargo Service F) (exclude non-scheduled flights)
-            df_list[n] = df_list[n][df_list[n]["CLASS"] == "F"]
+        # Filter T-100 so that CLASS is "F" (Scheduled Passenger/ Cargo Service F) (exclude non-scheduled flights)
+        self.T100_df = self.T100_df[self.T100_df["CLASS"] == "F"]
 
-            # Filter T-100 so that ORIGIN is self.origin_airport
-            df_list[n] = df_list[n][df_list[n]["ORIGIN"] == self.origin_airport]
-
-        # Reassign cleaned dfs to attributes
-        self.most_recent_T100_df = df_list[0]
-        self.all_past_T100_df = df_list[1]
-
-        # Filter all_past_T100_df so that DEST values are not DEST values in most_recent_T100_df
-        self.all_past_T100_df = self.all_past_T100_df[
-            ~self.all_past_T100_df["DEST"].isin(self.most_recent_T100_df["DEST"])
-        ]
+        # Filter T-100 so that ORIGIN is self.origin_airport
+        self.T100_df = self.T100_df[self.T100_df["ORIGIN"] == self.origin_airport]
 
         # Sort all_past_T100_df by recency in descending order
-        self.all_past_T100_df = self.all_past_T100_df.sort_values(
+        self.T100_df = self.T100_df.sort_values(
             by=["YEAR", "MONTH"], ascending=[False, False]
         )
 
         # Keep only the top-most row for a given destination (the most recent month of operation)
-        self.all_past_T100_df = self.all_past_T100_df.drop_duplicates(subset="DEST")
+        self.T100_df = self.T100_df.drop_duplicates(subset="DEST")
 
         # Merge iata_code field in airports_df with DEST field airport code in all_past_T100_df
-        self.all_past_T100_df = self.all_past_T100_df.merge(
+        self.T100_df = self.T100_df.merge(
             right=self.airports_df[["iata_code", "latitude_deg", "longitude_deg"]],
             how="left",
             left_on="DEST",
             right_on="iata_code",
         )
 
-        # Convert MONTH field to month name
-        self.all_past_T100_df["MONTH"] = self.all_past_T100_df["MONTH"].map(
+        # Create mew MONTH_NAME field for month name
+        self.T100_df["MONTH_NAME"] = self.T100_df["MONTH"].map(
             lambda x: calendar.month_name[x]
         )
 
         print(
-            self.all_past_T100_df[
+            self.T100_df[
                 ["UNIQUE_CARRIER", "DEST", "DEST_CITY_NAME", "MONTH", "YEAR"]
             ].head(30)
         )
+
+        # Ask user for specific airline to filter it down to
+        airlines = (
+            self.T100_df["UNIQUE_CARRIER_NAME"]
+            .sort_values(ascending=True)
+            .unique()
+            .tolist()
+        )
+
+        airlines.insert(0, "[All]")
+
+        # Create window
+        self.airline_filter_selection_box = tkinter.Toplevel(padx=20, pady=20)
+        self.airline_filter_selection = tkinter.StringVar(value="[All]")
+
+        # Create label
+        label = tkinter.Label(
+            master=self.airline_filter_selection_box,
+            text=f"Select an airline to see its network from {self.origin_airport},\nor [All] to see its entire network from there:",
+        )
+        label.grid(column=0, row=0)
+
+        # Create menu dropdown
+        tkinter.OptionMenu(
+            self.airline_filter_selection_box, self.airline_filter_selection, *airlines
+        ).grid(column=0, row=1)
+
+        self.airline_filter_selection_box.grab_set()
+
+        # Create menu dropdown
+        button = tkinter.Button(
+            master=self.airline_filter_selection_box,
+            text="OK",
+            command=self.button_clicked,
+        )
+        button.grid(column=0, row=2)
+
+        # Show the box
+        self.airline_filter_selection_box.wait_window()
 
     # Method to create the map
     def create_map(self):
@@ -193,7 +225,7 @@ class SuspendedFlightRoutesAnalyzer:
         }
 
         final_map = px.scatter_map(
-            data_frame=self.all_past_T100_df,
+            data_frame=self.T100_df,
             lat="latitude_deg",
             lon="longitude_deg",
             text="DEST",
@@ -237,12 +269,12 @@ class SuspendedFlightRoutesAnalyzer:
     # Method to run all previous methods
     def run(self):
         # Call get_origin_airport method
-        if not self.get_origin_airport():
-            self.window.destroy()
-            return
+        if self.get_user_selections():
 
-        # Call analyze_suspended_routes method
-        self.analyze_suspended_routes()
+            # Call analyze_suspended_routes method
+            self.analyze_suspended_routes()
 
-        # Call create_map method
-        self.create_map()
+            # Call create_map method
+            # self.create_map()
+
+        self.window.destroy()
