@@ -2,7 +2,7 @@ import pandas as pd
 import tkinter
 from tkinter import simpledialog, messagebox
 from pathlib import Path
-import plotly.express as px
+
 import calendar
 
 TITLE = "AeroEvolve"
@@ -23,8 +23,6 @@ class NetworkAnalyzer:
         self.airline_filter_selection = None
         self.airline = None
         self.origin_airport = None
-        self.origin_airport_lat = None
-        self.origin_airport_lon = None
         self.T100_df = pd.DataFrame()
         self.airports_df = pd.DataFrame()
 
@@ -97,15 +95,6 @@ class NetworkAnalyzer:
                 # Set origin_airport attribute to result
                 self.origin_airport = origin_airport
 
-                # Get origin airport coordinates from airports_df
-                self.origin_airport_lat = self.airports_df.loc[
-                    self.airports_df["iata_code"] == self.origin_airport, "latitude_deg"
-                ].values[0]
-                self.origin_airport_lon = self.airports_df.loc[
-                    self.airports_df["iata_code"] == self.origin_airport,
-                    "longitude_deg",
-                ].values[0]
-
                 return True
             else:  # Invalid airport
                 # Display message box for error message
@@ -136,15 +125,17 @@ class NetworkAnalyzer:
         # Filter T-100 so that ORIGIN is self.origin_airport
         self.T100_df = self.T100_df[self.T100_df["ORIGIN"] == self.origin_airport]
 
+        # Drop duplicates by UNIQUE_CARRIER, DEST, MONTH, and YEAR
+        self.T100_df = self.T100_df.drop_duplicates(
+            subset=["UNIQUE_CARRIER", "DEST", "MONTH", "YEAR"]
+        )
+
         # Sort all_past_T100_df by recency in descending order
         self.T100_df = self.T100_df.sort_values(
             by=["YEAR", "MONTH"], ascending=[False, False]
         )
 
-        # Keep only the top-most row for a given destination (the most recent month of operation)
-        self.T100_df = self.T100_df.drop_duplicates(subset="DEST")
-
-        # Merge iata_code field in airports_df with DEST field airport code in all_past_T100_df
+        # Merge iata_code field in airports_df with DEST field airport code in all_past_T100_df for destination airport codes
         self.T100_df = self.T100_df.merge(
             right=self.airports_df[["iata_code", "latitude_deg", "longitude_deg"]],
             how="left",
@@ -152,15 +143,19 @@ class NetworkAnalyzer:
             right_on="iata_code",
         )
 
+        # Create new ORIGIN_LAT field
+        self.T100_df["ORIGIN_LAT"] = self.airports_df.loc[
+            self.airports_df["iata_code"] == self.origin_airport, "latitude_deg"
+        ].values[0]
+
+        # Create new ORIGIN_LON field
+        self.T100_df["ORIGIN_LON"] = self.airports_df.loc[
+            self.airports_df["iata_code"] == self.origin_airport, "longitude_deg"
+        ].values[0]
+
         # Create mew MONTH_NAME field for month name
         self.T100_df["MONTH_NAME"] = self.T100_df["MONTH"].map(
             lambda x: calendar.month_name[x]
-        )
-
-        print(
-            self.T100_df[
-                ["UNIQUE_CARRIER", "DEST", "DEST_CITY_NAME", "MONTH", "YEAR"]
-            ].head(30)
         )
 
         # Ask user for specific airline to filter it down to
@@ -175,6 +170,7 @@ class NetworkAnalyzer:
 
         # Create window
         self.airline_filter_selection_box = tkinter.Toplevel(padx=20, pady=20)
+        self.airline_filter_selection_box.title(TITLE)
         self.airline_filter_selection = tkinter.StringVar(value="[All]")
 
         # Create label
@@ -189,8 +185,6 @@ class NetworkAnalyzer:
             self.airline_filter_selection_box, self.airline_filter_selection, *airlines
         ).grid(column=0, row=1)
 
-        self.airline_filter_selection_box.grab_set()
-
         # Create menu dropdown
         button = tkinter.Button(
             master=self.airline_filter_selection_box,
@@ -200,71 +194,33 @@ class NetworkAnalyzer:
         button.grid(column=0, row=2)
 
         # Show the box
+        self.airline_filter_selection_box.grab_set()
         self.airline_filter_selection_box.wait_window()
 
-    # Method to create the map
-    def create_map(self):
-        # Create the map with suspended airports
-        hover_cols = {
-            "latitude_deg": False,
-            "longitude_deg": False,
-            "DEST": False,
-            "DEST_CITY_NAME": True,
-            "DEST_COUNTRY_NAME": True,
-            "MONTH": True,
-            "YEAR": True,
-            "UNIQUE_CARRIER_NAME": True,
-        }
+        # If self.airline is not "[All]":
+        if self.airline != "[All]":
+            # Filter self_T100_df one by self.airline
+            self.T100_df = self.T100_df[
+                self.T100_df["UNIQUE_CARRIER_NAME"] == self.airline
+            ]
 
-        custom_labels = {
-            "DEST_CITY_NAME": "City",
-            "DEST_COUNTRY_NAME": "Country",
-            "MONTH": "Month Suspended",
-            "YEAR": "Year Suspended",
-            "UNIQUE_CARRIER_NAME": "Airline last served",
-        }
-
-        final_map = px.scatter_map(
-            data_frame=self.T100_df,
-            lat="latitude_deg",
-            lon="longitude_deg",
-            text="DEST",
-            hover_data=hover_cols,
-            labels=custom_labels,
-            zoom=2,
-            center={"lat": self.origin_airport_lat, "lon": self.origin_airport_lon},
+        print(
+            self.T100_df[
+                [
+                    "UNIQUE_CARRIER",
+                    "DEST",
+                    "DEST_CITY_NAME",
+                    "MONTH",
+                    "YEAR",
+                ]
+            ].head(30)
         )
 
-        # Add origin point
-        final_map.add_trace(
-            dict(
-                type="scattermap",
-                lat=[self.origin_airport_lat],
-                lon=[self.origin_airport_lon],
-                text=[self.origin_airport],
-                mode="markers+text",
-                textposition="top center",
-                textfont=dict(
-                    color="#000000", family="Helvetica", size=18, weight="bold"
-                ),
-                marker=dict(size=18, color="#000000"),
-                showlegend=False,
-            )
-        )
+    # Method to create the map or update it whenever the slider is moved
 
-        # Add title and subtitle, change map base
-        final_map.update_layout(
-            title={
-                "text": f"Suspended flight routes from {self.origin_airport} since 1990",
-                "subtitle": {
-                    "text": "Based on Bureau of Transportation Statistics (BTS) T-100 tables. For more details about a specific airport, hover on its mark on the map."
-                },
-            },
-            mapbox_style="basic",
-            showlegend=False,
-        )
+    # Filter self.T00_df more
 
-        final_map.show()
+    # Create origin airport marker
 
     # Method to run all previous methods
     def run(self):
