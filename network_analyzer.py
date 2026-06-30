@@ -101,7 +101,8 @@ class NetworkAnalyzer:
     def get_user_selections(self):
         # Ask user for airport code
         origin_airport = simpledialog.askstring(
-            title=TITLE, prompt="Enter a three-character IATA airport code:"
+            title=TITLE,
+            prompt="Enter a three-character IATA airport code:\n\n(If a non-U.S. airport code is entered, \nonly routes to the U.S. will be shown.)",
         )
 
         if origin_airport:
@@ -131,7 +132,7 @@ class NetworkAnalyzer:
         else:
             return False
 
-    def analyze_suspended_routes(self):
+    def analyze_routes(self):
         # Clean self.T100_df
 
         # Drop NA values
@@ -217,7 +218,7 @@ class NetworkAnalyzer:
 
         # If self.airline is not All Airlines:
         if self.airline != "All Airlines":
-            # Filter self_T100_df by self.airline
+            # Filter self_T100_df by user-selected airline
             self.T100_df = self.T100_df[
                 self.T100_df["UNIQUE_CARRIER_NAME"] == self.airline
             ]
@@ -226,7 +227,7 @@ class NetworkAnalyzer:
         self.app.layout = self.build_layout()
         self.register_callbacks()
 
-    # Method to construct and return layout tree (for self.app_layout)
+    # Method to construct and return layout tree
     def build_layout(self):
         return html.Div(
             # Overall style
@@ -236,9 +237,7 @@ class NetworkAnalyzer:
                 "height": "98vh",
                 "margin": "0",
                 "padding": "10px",
-                "font-family": "helvetica",
-                "font-size": 12,
-                "color": "#000",
+                "fontFamily": "Helvetica",
             },
             children=[
                 # Div for map
@@ -264,10 +263,26 @@ class NetworkAnalyzer:
                             for i, time in enumerate(self.timeline)
                         },
                         id="slider",
-                        tooltip={},
+                        tooltip={"placement": "bottom", "always_visible": False},
                         updatemode="drag",
+                        allow_direct_input=False,  # Hide input box
+                        included=False,
                     ),
-                    style={"flex": "1", "paddingTop": "20px"},
+                    style={
+                        "flex": "1",
+                        "paddingTop": "20px",
+                    },
+                ),
+                # Div for bottom data source note
+                html.Div(
+                    "Based on Bureau of Transportation Statistics (BTS) T-100 Segment All Carrier tables.",
+                    style={
+                        "fontSize": "18px",
+                        "color": "#A7A9AC",
+                        "marginLeft": "10px",
+                        "marginBottom": "10px",
+                        "padding": "0px",
+                    },
                 ),
             ],
         )
@@ -282,10 +297,25 @@ class NetworkAnalyzer:
             return self.update_map(slider_val)
 
     def update_map(self, slider_position):
+        # Constants for map
+        TYPEFACE = "Helvetica"
+        HOVER_FONT_SIZE = 12
+        SMALL_FONT_SIZE = 12
+        MEDIUM_FONT_SIZE = 18
+        LARGE_FONT_SIZE = 36
+        ORIGIN_COLOR = "#000000"
+        DEST_COLOR = "#00933c"
+        ORIGIN_LAT = self.airports_df.loc[
+            self.airports_df["iata_code"] == self.origin_airport, "latitude_deg"
+        ].values[0]
+        ORIGIN_LON = self.airports_df.loc[
+            self.airports_df["iata_code"] == self.origin_airport, "longitude_deg"
+        ].values[0]
+
         # Get year and month from timeline position
         target_year, target_month, target_month_name = self.timeline[slider_position]
 
-        # Filter self.T00_df more into a new df
+        # Filter self.T00_df by year and month, put into new df
         dest_df = self.T100_df[
             (self.T100_df["YEAR"] == target_year)
             & (self.T100_df["MONTH"] == target_month)
@@ -295,13 +325,8 @@ class NetworkAnalyzer:
         origin_df = dest_df.copy()
 
         # Change the coordinates to match that of the origin airport
-        origin_df["LAT"] = self.airports_df.loc[
-            self.airports_df["iata_code"] == self.origin_airport, "latitude_deg"
-        ].values[0]
-
-        origin_df["LON"] = self.airports_df.loc[
-            self.airports_df["iata_code"] == self.origin_airport, "longitude_deg"
-        ].values[0]
+        origin_df["LAT"] = ORIGIN_LAT
+        origin_df["LON"] = ORIGIN_LON
 
         # Apply even index to origin_df
         origin_df.index = range(0, len(origin_df) * 2, 2)
@@ -310,64 +335,129 @@ class NetworkAnalyzer:
         dest_df.index = range(1, len(dest_df) * 2, 2)
 
         # Concat origin_df and dest_df
-        display_df = pd.concat([origin_df, dest_df])
+        routes_df = pd.concat([origin_df, dest_df])
 
-        if not display_df.empty:
-            # Create map
-            display_map = px.line_geo(
-                data_frame=display_df,
+        # Create a new column "ALL_CARRIERS" to deal with duplication of lines due to multiple airlines operating the same route
+        dest_df = (
+            dest_df.groupby(
+                [
+                    "ROUTE",
+                    "LAT",
+                    "LON",
+                    "DEST",
+                    "DEST_CITY_NAME",
+                ]
+            )["UNIQUE_CARRIER_NAME"]
+            .apply(lambda x: ", ".join(sorted(x.unique())))
+            .reset_index(name="ALL_CARRIERS")
+        )
+
+        # Base map
+        display_map = px.line_geo(
+            title=f"Departures from {self.origin_airport} for {self.airline} in {target_month_name} {target_year}",
+            projection="natural earth",
+        )
+
+        # If there are routes to display
+        if not routes_df.empty:
+            # Trace for routes
+            routes_map = px.line_geo(
+                data_frame=routes_df,
                 lat="LAT",
                 lon="LON",
-                hover_data=["ORIGIN_CITY_NAME", "DEST_CITY_NAME"],
                 line_group="ROUTE",
-                center={
-                    "lat": 0,
-                    "lon": 0,
-                },
-                title=f"Departures from {self.origin_airport} for {self.airline} in {target_month_name} {target_year}",
-                projection="natural earth",
+            )
+            routes_map.update_traces(
+                line=dict(color=DEST_COLOR),
+                hoverinfo="none",
+            )
+            for route in routes_map.data:
+                display_map.add_trace(route)
+
+            # Trace for destination airports
+            display_map.add_trace(
+                go.Scattergeo(
+                    lat=dest_df["LAT"],
+                    lon=dest_df["LON"],
+                    mode="text",
+                    text=dest_df["DEST"],
+                    textposition="top center",
+                    textfont=dict(
+                        family=TYPEFACE,
+                        size=SMALL_FONT_SIZE,
+                        color=DEST_COLOR,
+                    ),
+                    showlegend=False,
+                    customdata=dest_df[
+                        ["DEST", "DEST_CITY_NAME", "ALL_CARRIERS"]
+                    ].values,
+                    hovertemplate=(
+                        "Destination Airport: %{customdata[0]}<br>"
+                        "Destination City: %{customdata[1]}<br>"
+                        "Airline(s): %{customdata[2]}<extra></extra>"
+                    ),
+                    hoverlabel=dict(
+                        bgcolor=DEST_COLOR,
+                        font_family=TYPEFACE,
+                        font_color="#FFFFFF",
+                        font_size=HOVER_FONT_SIZE,
+                    ),
+                )
             )
 
-            # Layout options
-            display_map.update_traces(
-                line=dict(color="#00933c"),
-            )
-
-            display_map.update_layout(
-                map_style="light",
-                transition_duration=200,
-                height=None,
-                geo=dict(
-                    countrycolor="#444",
-                    countrywidth=1,
-                    oceancolor="#3399FF",
-                    showframe=False,
-                    showland=True,
+        # Trace for origin airport
+        display_map.add_trace(
+            go.Scattergeo(
+                lat=[ORIGIN_LAT],
+                lon=[ORIGIN_LON],
+                mode="markers+text",
+                text=[self.origin_airport],
+                textposition="top center",
+                textfont=dict(
+                    family=TYPEFACE,
+                    size=MEDIUM_FONT_SIZE,
+                    color=ORIGIN_COLOR,
+                ),
+                marker=dict(
+                    size=SMALL_FONT_SIZE,
+                    color=ORIGIN_COLOR,
+                ),
+                showlegend=False,
+                customdata=origin_df["ORIGIN_CITY_NAME"],
+                hovertemplate="%{customdata}<extra></extra>",
+                hoverlabel=dict(
+                    bgcolor=ORIGIN_COLOR,
+                    font_family=TYPEFACE,
+                    font_color="#FFFFFF",
+                    font_size=HOVER_FONT_SIZE,
                 ),
             )
+        )
 
-            return display_map
-        else:
-            empty_map = go.Figure()
+        # General map layout
+        display_map.update_layout(
+            title_font_family=TYPEFACE,
+            title_font_size=LARGE_FONT_SIZE,
+            title_font_color=ORIGIN_COLOR,
+            hovermode="closest",
+            hoverdistance=30,
+            transition_duration=200,
+            height=None,
+        )
 
-            empty_map.update_layout(
-                map_style="open-street-map",
-                title=f"There weren't any departures from {self.origin_airport} for {self.airline} in {target_month_name} {target_year}",
-            )
-
-            return empty_map
+        return display_map
 
     # Method to run all previous methods
     def run(self):
-        # Call get_origin_airport method
+        # Call get_user_selections method
         if self.get_user_selections():
-            # Call analyze_suspended_routes method
-            self.analyze_suspended_routes()
+            # Call analyze_routes method
+            self.analyze_routes()
 
             # Destroy Tkinter window
-            self.window.destroy()
+            # self.window.destroy()
 
-            # Open Dash erver
+            # Open Dash server
             server_thread = threading.Thread(
                 target=self.app.run,
                 kwargs={"debug": False, "port": 8050, "use_reloader": False},
@@ -376,11 +466,11 @@ class NetworkAnalyzer:
 
             server_thread.start()
 
-            # Show the map
+            # Show window for map
             webview.create_window(
                 title=TITLE, url="http://127.0.0.1:8050/", maximized=True
             )
             webview.start()
-        else:
-            # Destroy Tkinter window
-            self.window.destroy()
+
+        # Destroy Tkinter window
+        self.window.destroy()
