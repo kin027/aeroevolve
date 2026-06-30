@@ -16,7 +16,7 @@ Also, an airline's route network is living and breathing. The difference between
 
 With that in mind, an interesting takeaway I got from running this was with American Airlines' long haul presence from LAX (Los Angeles). The map shows that in July 2019, the last summer before COVID, American flew from LAX to nine long haul destinations, but in July 2025, years after the effects of the pandemic had settled, American flew to just three: London/Heathrow, Sydney, and Tokyo/Haneda. 
 
-(Let's be honest, something like this was bound to happen to an airline that [(shortsightedly) decided to retire (not park) nearly half of its widebody fleet during COVID](https://viewfromthewing.com/american-retired-40-of-its-long-haul-planes-during-covid-many-are-now-headed-to-a-new-airline/). But some of those routes continue to be operated by American's oneworld alliance partners, and given how phenomenal many of them are, I ain't complaining.) ✈️
+(Let's be honest, something like this was bound to happen to an airline that (shortsightedly) [decided to retire (not park) nearly half of its widebody fleet during COVID](https://viewfromthewing.com/american-retired-40-of-its-long-haul-planes-during-covid-many-are-now-headed-to-a-new-airline/). But some of those routes continue to be operated by American's oneworld alliance partners, and given how phenomenal many of them are, I ain't complaining.) ✈️
 
 **Try the AeroEvolve Visualizer out with your home airport to discover where you used to be able to go, and where you could go today, with just one flight!**
 
