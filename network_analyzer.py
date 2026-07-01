@@ -352,7 +352,7 @@ class NetworkAnalyzer:
             .reset_index(name="ALL_CARRIERS")
         )
 
-        # Base map
+        # Create base map
         display_map = px.line_geo(
             title=f"Departures from {self.origin_airport} for {self.airline} in {target_month_name} {target_year}",
             projection="natural earth",
@@ -360,7 +360,7 @@ class NetworkAnalyzer:
 
         # If there are routes to display
         if not routes_df.empty:
-            # Trace for routes
+            # Create trace for routes
             routes_map = px.line_geo(
                 data_frame=routes_df,
                 lat="LAT",
@@ -374,7 +374,7 @@ class NetworkAnalyzer:
             for route in routes_map.data:
                 display_map.add_trace(route)
 
-            # Trace for destination airports
+            # Create trace for destination airports
             display_map.add_trace(
                 go.Scattergeo(
                     lat=dest_df["LAT"],
@@ -405,7 +405,7 @@ class NetworkAnalyzer:
                 )
             )
 
-        # Trace for origin airport
+        # Create trace for origin airport
         display_map.add_trace(
             go.Scattergeo(
                 lat=[ORIGIN_LAT],
@@ -434,7 +434,7 @@ class NetworkAnalyzer:
             )
         )
 
-        # General map layout
+        # Change general map layout
         display_map.update_layout(
             title_font_family=TYPEFACE,
             title_font_size=LARGE_FONT_SIZE,
@@ -453,9 +453,6 @@ class NetworkAnalyzer:
         if self.get_user_selections():
             # Call analyze_routes method
             self.analyze_routes()
-
-            # Destroy Tkinter window
-            # self.window.destroy()
 
             # Open Dash server
             server_thread = threading.Thread(
