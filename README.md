@@ -94,4 +94,6 @@ I got data from the Bureau of Transportation Statistics (BTS), a part of the U.S
 
 - When All Carriers is selected, color-coding the lines based on the number of carriers operating that route.
 
-- Better formatting of slider.
+- Formatting the slider better (e.g. with the tooltip).
+
+- Preserving the map view when changing the month/year.

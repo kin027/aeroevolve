@@ -275,7 +275,7 @@ class NetworkAnalyzer:
                 ),
                 # Div for bottom data source note
                 html.Div(
-                    "Based on Bureau of Transportation Statistics (BTS) T-100 Segment (All Carriers) tables.<br>If the origin airport is not in the U.S., only routes to the U.S. will be shown.",
+                    "Based on Bureau of Transportation Statistics (BTS) T-100 Segment (All Carriers) tables. If the origin airport is not in the U.S., only routes to the U.S. will be shown.",
                     style={
                         "fontSize": "18px",
                         "color": "#A7A9AC",
@@ -394,7 +394,7 @@ class NetworkAnalyzer:
                     hovertemplate=(
                         "Destination Airport: %{customdata[0]}<br>"
                         "Destination City: %{customdata[1]}<br>"
-                        "Airline(s): %{customdata[2]}<extra></extra>"
+                        "Carrier(s): %{customdata[2]}<extra></extra>"
                     ),
                     hoverlabel=dict(
                         bgcolor=DEST_COLOR,
