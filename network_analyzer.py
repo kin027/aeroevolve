@@ -275,7 +275,7 @@ class NetworkAnalyzer:
                 ),
                 # Div for bottom data source note
                 html.Div(
-                    "Based on Bureau of Transportation Statistics (BTS) T-100 Segment All Carrier tables.",
+                    "Based on Bureau of Transportation Statistics (BTS) T-100 Segment (All Carriers) tables.",
                     style={
                         "fontSize": "18px",
                         "color": "#A7A9AC",
