@@ -6,17 +6,17 @@ A Python tool that analyzes 1990-2025 Bureau of Transportation Statistics (BTS) 
 
 ### Why I Built This
 
-I'm an avgeek (aviation enthusiast) and data nerd. In fact, [I log each of my over 300,000 miles of air travel on myFlightradar24](https://my.flightradar24.com/kin_on_a_plane). So, when I found _decades_ of BTS T-100 tables (linked below) showing raw information on airline routes, I knew I had to do something with them, and this... wasn't originally the plan. I initially planned to build something that would map out all airports from a given airport that have lost nonstop service, then I thought, "Wouldn't it be cooler to use a slider to see how airlines have changed their networks over 36 years?" I did have to limit the routes to one origin airport that the user enters, or else the resulting map would look more like a plate of spaghetti.
+I'm an avgeek (aviation enthusiast) and data nerd. If [my 300,000+ miles of air travel](https://my.flightradar24.com/kin_on_a_plane) have taught me anything, it's that the airline industry is truly one where change is the only constant. That especially goes for airlines' route networks. So, when I found _decades_ of BTS T-100 tables (linked below) showing raw information on their routes, I knew I had to do something with them, and this... wasn't originally the plan. I initially planned to build something that would map out all airports from a given airport that have lost nonstop service, then I thought, "Wouldn't it be cooler to use a slider to see how airlines have changed their networks over 36 years?" I did have to limit the routes to one origin airport that the user enters, or else the resulting map would look more like a plate of spaghetti.
 
 ### Key Insights
 
-Just by dragging the slider forward (or hitting the right arrow key on my keyboard), I could easily see an airline's network strategy for the airports I frequent unfold over time, instead of combing through over 13 million rows of government data. (Yes, that's what the program said.) 
+Just by dragging the slider forward (or hitting the right arrow key on my keyboard), I could easily see an airline's network strategy for the airports I frequent unfold over time, instead of combing through over 13 million rows of government data. 
 
-Also, an airline's route network is living and breathing. The difference between a profitable airline and one facing bankruptcy could simply be in network planning, so airlines must be quick to adapt to changes in market conditions. From 1990 to now, we've experienced financial crises, pandemics, and geopolitical conflicts, all of which dramatically alter airlines' route networks.
+Also, an airline's route network is living and breathing. The difference between a profitable airline and one facing bankruptcy could simply be in network planning, so airlines must be quick to adapt to changes in market conditions. From 1990 to now, we've experienced financial crises, pandemics, and geopolitical conflicts, all of which keep network planners on their toes.
 
 With that in mind, an interesting takeaway I got from running this was with American Airlines' long haul presence from LAX (Los Angeles). The map shows that in July 2019, the last summer before COVID, American flew from LAX to nine long haul destinations, but in July 2025, years after the effects of the pandemic had settled, American flew to just three: London/Heathrow, Sydney, and Tokyo/Haneda. 
 
-(Let's be honest, something like this was bound to happen to an airline that (shortsightedly) [decided to retire (not park) nearly half of its widebody fleet during COVID](https://viewfromthewing.com/american-retired-40-of-its-long-haul-planes-during-covid-many-are-now-headed-to-a-new-airline/). But some of those routes continue to be operated by American's oneworld alliance partners, and given how phenomenal many of them are, I ain't complaining.) ✈️
+(Let's be honest, something like this was bound to happen to an airline that (shortsightedly) [decided to retire (not park) nearly half of its widebody fleet during COVID](https://viewfromthewing.com/american-retired-40-of-its-long-haul-planes-during-covid-many-are-now-headed-to-a-new-airline/). But some of those routes continue to be operated by American's oneworld alliance partners, and given how phenomenal some of them are, I ain't complaining.) ✈️
 
 **Try the AeroEvolve Visualizer out with your home airport to discover where you used to be able to go, and where you could go today, with just one flight!**
 
@@ -59,9 +59,9 @@ pip install -r requirements.txt
 python main.py
 ```
 
-## Data Sources
+## Data Source
 
-I sourced data from the Bureau of Transportation Statistics (BTS), a part of the U.S. Department of Transportation. Airlines report their traffic data to the BTS each month.
+I got data from the Bureau of Transportation Statistics (BTS), a part of the U.S. Department of Transportation. Airlines report their traffic data to the BTS each month.
 
 - [BTS T-100 Segment (All Carriers) table from 1990 to 2025](https://www.transtats.bts.gov/DatabaseInfo.asp?QO_VQ=EEE) with DEPARTURES_PERFORMED, PASSENGERS, UNIQUE_CARRIER, UNIQUE_CARRIER_NAME, ORIGIN, ORIGIN_CITY_NAME, ORIGIN_COUNTRY_NAME, DEST, DEST_CITY_NAME, DEST_COUNTRY_NAME, YEAR, MONTH, CLASS fields (to identify nonstop flights, the airlines that operated them, and the months and years of operation)
 
@@ -86,6 +86,6 @@ I sourced data from the Bureau of Transportation Statistics (BTS), a part of the
 ## Limitations
 
 - The data is not real-time; it comes from BTS data tables that the government releases only once a quarter (with a three-month delay).
-  - But I can get 2026 data when it's available and immediately visualize the important stuff that happened this year, like Alaska going intercontiental and Spirit going belly-up (RIP Spirit)!
+  - But I can get 2026 data when it's available and immediately visualize the important stuff that happened this year, like Alaska going intercontiental and Spirit going belly-up (RIP Spirit).
     
-- Routes that do not touch the U.S. are excluded because the T-100 tables only have routes that start or end somewhere in the U.S.
+- Routes that do not touch the U.S. are excluded because the T-100 tables only include routes that start or end somewhere in the U.S.
