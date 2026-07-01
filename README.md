@@ -89,3 +89,9 @@ I got data from the Bureau of Transportation Statistics (BTS), a part of the U.S
   - But I can get 2026 data when it's available and immediately visualize the important stuff that happened this year, like Alaska going intercontiental and Spirit going belly-up (RIP Spirit).
     
 - Routes that do not touch the U.S. are excluded because the T-100 tables only include routes that start or end somewhere in the U.S.
+
+## Future Improvement Plans
+
+- When All Carriers is selected, color-coding the lines based on the number of carriers operating that route.
+
+- Better formatting of slider.

@@ -184,17 +184,17 @@ class NetworkAnalyzer:
             .tolist()
         )
 
-        airlines.insert(0, "All Airlines")
+        airlines.insert(0, "All Carriers")
 
         # Create window
         self.airline_filter_selection_box = Toplevel(padx=20, pady=20)
         self.airline_filter_selection_box.title(TITLE)
-        self.airline_filter_selection = StringVar(value="All Airlines")
+        self.airline_filter_selection = StringVar(value="All Carriers")
 
         # Create label
         label = Label(
             master=self.airline_filter_selection_box,
-            text=f"Select an airline to see its network from {self.origin_airport},\nor All Airlines to see the entire network from {self.origin_airport}:",
+            text=f"Select an airline to see its network from {self.origin_airport},\nor All Carriers to see the entire network from {self.origin_airport}:",
         )
         label.grid(column=0, row=0)
 
@@ -216,8 +216,8 @@ class NetworkAnalyzer:
         self.window.wait_window(self.airline_filter_selection_box)
         self.window.update()
 
-        # If self.airline is not All Airlines:
-        if self.airline != "All Airlines":
+        # If self.airline is not All Carriers:
+        if self.airline != "All Carriers":
             # Filter self_T100_df by user-selected airline
             self.T100_df = self.T100_df[
                 self.T100_df["UNIQUE_CARRIER_NAME"] == self.airline
@@ -275,7 +275,7 @@ class NetworkAnalyzer:
                 ),
                 # Div for bottom data source note
                 html.Div(
-                    "Based on Bureau of Transportation Statistics (BTS) T-100 Segment (All Carriers) tables.",
+                    "Based on Bureau of Transportation Statistics (BTS) T-100 Segment (All Carriers) tables.<br>If the origin airport is not in the U.S., only routes to the U.S. will be shown.",
                     style={
                         "fontSize": "18px",
                         "color": "#A7A9AC",
