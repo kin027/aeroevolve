@@ -14,9 +14,7 @@ So, when I found _decades_ of BTS T-100 tables (linked below) showing raw inform
 
 ### Key Insights
 
-As I discussed earlier, airline route networks are always changing. But instead of combing through over 13 million rows of government data, all I need to do to watch an airline's network strategy unfold over time is to simply drag the slider forward.
-
-With that convenience, an interesting takeaway I learned from running this with my home airport, PDX (Portland, OR), was that in the mid-90s, we had a nonstop flight to... TPE (Taipei)??? And the airline that ran it was... Delta???
+Running this saves me from needing to comb through over 13 million rows of raw government data, and instead watch an airline's network strategy unfold just by dragging the slider forward. Since the data goes back to 1990, some interesting aviation history I never thought of is hidden among those rows. Without this, I never would've learned that my home airport, PDX (Portland, OR) once had a nonstop flight to... TPE (Taipei)??? And the airline that operated it was... Delta???
 
 After some digging, I found that [Delta operated a transpacific gateway hub at PDX in the 90s](https://www.travelcodex.com/de-portland/), which would explain why they also ran flights to various airports in Japan at that time. Unfortunately, Portland doesn't see a single nonstop to Asia these days (except for that time [SEA (Seattle-Tacoma) had a fuel shortage that forced STARLUX's SEA-TPE flights to make a fuel stop at PDX](https://www.paddleyourownkanoo.com/2025/11/22/seattle-tacoma-could-run-out-of-jet-fuel-heres-how-airlines-will-manage-this-mess/)).
 
