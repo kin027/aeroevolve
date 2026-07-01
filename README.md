@@ -6,34 +6,43 @@ A Python tool that analyzes 1990-2025 Bureau of Transportation Statistics (BTS) 
 
 ### Why I Built This
 
-I'm an avgeek (aviation enthusiast) and data nerd. If [my 300,000+ miles of air travel](https://my.flightradar24.com/kin_on_a_plane) has taught me anything, it's that the airline industry is truly one where the only constant is change. That especially goes for airline route networks. So, when I found _decades_ of BTS T-100 tables (linked below) showing raw information on airline routes, I knew I had to do something with them, and this... wasn't originally the plan. I initially wanted to build something that would map out all airports from a given airport that were once connected nonstop, but now aren't, then I thought, "Wouldn't it be cooler to use a slider to visualize 36 years of airline route networks on a map?" (I did have to limit the routes to one origin airport that the user enters, though, or else the resulting map would look more like a plate of spaghetti.)
+I'm an avgeek (aviation enthusiast) and data nerd. If [my 300,000+ miles of air travel](https://my.flightradar24.com/kin_on_a_plane) has taught me anything, it's that the airline industry is truly one where the only constant is change. That especially goes for airlines' route networks, which network planners always monitor and tweak in response to economic conditions, financial crises, pandemics, and geopolitical conflicts.
+
+So, when I found _decades_ of BTS T-100 tables (linked below) showing raw information on airline routes, I knew I had to do something with them, and this... wasn't originally the plan. I initially wanted to build something that would map out all airports from a given airport that were once connected nonstop, but now aren't, then I thought, "Wouldn't it be cooler to use a slider to visualize 36 years of airline route networks on a map?"
+
+(I did have to limit the routes to one origin airport that the user enters, though, or else the resulting map would look more like a plate of spaghetti.)
 
 ### Key Insights
 
-Just by dragging the slider forward (or hitting the right arrow key on my keyboard), I could easily see an airline's network strategy for the airports I frequent unfold over time, instead of combing through over 13 million rows of government data. 
+As I discussed earlier, airline route networks are always changing. But instead of combing through over 13 million rows of government data, all I need to do to watch an airline's network strategy unfold over time is to simply drag the slider forward.
 
-Also, an airline's route network is living and breathing. The difference between a profitable airline and one facing bankruptcy could simply be in network planning, so airlines must be quick to adapt to changes in market conditions. From 1990 to now, we've experienced financial crises, pandemics, and geopolitical conflicts, all of which keep network planners on their toes.
+With that convenience, an interesting takeaway I learned from running this with my home airport, PDX (Portland, OR), was that in the mid-90s, we had a nonstop flight to... TPE (Taipei)??? And the airline that ran it was... Delta???
 
-With that in mind, an interesting takeaway I got from running this was with American Airlines' long haul presence from LAX (Los Angeles). In July 2019, the last summer before COVID, American flew from LAX to nine long haul destinations, but in July 2025, years after the effects of the pandemic had settled, American trimmed that down to just three: London/Heathrow, Sydney, and Tokyo/Haneda. (But let's be honest, something like that was bound to happen to an airline that [decided to shave nearly half of its widebody fleet during COVID](https://viewfromthewing.com/american-retired-40-of-its-long-haul-planes-during-covid-many-are-now-headed-to-a-new-airline/). However, American's oneworld alliance partners continue to operate some of those dropped routes, and given how phenomenal they are, I ain't complaining.) ✈️
+After some digging, I found that [Delta operated a transpacific gateway hub at PDX in the 90s](https://www.travelcodex.com/de-portland/), which would explain why they also ran flights to various airports in Japan at that time. Unfortunately, Portland doesn't see a single nonstop to Asia these days (except for that time [SEA (Seattle-Tacoma) had a fuel shortage that forced STARLUX's SEA-TPE flights to make a fuel stop at PDX](https://www.paddleyourownkanoo.com/2025/11/22/seattle-tacoma-could-run-out-of-jet-fuel-heres-how-airlines-will-manage-this-mess/)).
+
+Also, [Delta's 2024 handover of their PDX-AMS (Amsterdam) route to their partner KLM](https://simpleflying.com/klm-replaces-delta-air-lines-from-amsterdam-portland/) officially marked the end of their long-haul operation out of PDX, meaning that Portland-based Delta loyalists must now connect at SEA onto one of their many long-haul services to get anywhere meaningful. Oh well, one more MQS (Medallion Qualifying Segment) for them. ✈️
 
 **Try the AeroEvolve Visualizer out with your home airport to discover where you used to be able to go, and where you could go today, with just one flight!**
 
 ## Getting Started
 
-Make sure you have Python 3.13 or higher installed. 
+Make sure you have Python 3.13 or higher installed.
 
 Note for Linux users: You may need to install Tkinter manually if it isn't included in your distro's default Python package:
+
 ```bash
 sudo apt-get install python3-tk
 ```
 
 1. Clone this repository:
+
 ```bash
 git clone https://github.com/kin027/aeroevolve.git
 cd aeroevolve
 ```
 
 2. Create a virtual environment:
+
 ```bash
 # Create the environment
 python -m venv venv
@@ -48,11 +57,15 @@ venv\Scripts\activate
 # On Windows (PowerShell):
 .\venv\Scripts\Activate.ps1
 ```
+
 3. Install the dependencies (you don't need to download the data tables themselves as I've already included the final ones in the repo):
+
 ```bash
 pip install -r requirements.txt
 ```
+
 4. Run the program!
+
 ```bash
 python main.py
 ```
@@ -85,7 +98,6 @@ I downloaded data from the Bureau of Transportation Statistics (BTS), a part of 
 
 - The data is not real-time; it comes from BTS data tables that the government releases only once a quarter (with a three-month delay).
   - But I can get 2026 data when it's available and immediately visualize the important stuff that happened this year, like Alaska going intercontiental and Spirit going belly-up (RIP Spirit).
-    
 - Routes that do not touch the U.S. are excluded because the T-100 tables only include routes that start or end somewhere in the U.S.
 
 ## Future Improvement Plans
