@@ -14,9 +14,7 @@ Just by dragging the slider forward (or hitting the right arrow key on my keyboa
 
 Also, an airline's route network is living and breathing. The difference between a profitable airline and one facing bankruptcy could simply be in network planning, so airlines must be quick to adapt to changes in market conditions. From 1990 to now, we've experienced financial crises, pandemics, and geopolitical conflicts, all of which keep network planners on their toes.
 
-With that in mind, an interesting takeaway I got from running this was with American Airlines' long haul presence from LAX (Los Angeles). The map shows that in July 2019, the last summer before COVID, American flew from LAX to nine long haul destinations, but in July 2025, years after the effects of the pandemic had settled, American flew to just three: London/Heathrow, Sydney, and Tokyo/Haneda. 
-
-Let's be honest, something like this was bound to happen to an airline that (shortsightedly) [decided to retire (not park) nearly half of its widebody fleet during COVID](https://viewfromthewing.com/american-retired-40-of-its-long-haul-planes-during-covid-many-are-now-headed-to-a-new-airline/). But American's oneworld alliance partners continue to operate some of those routes, and given how phenomenal they are, I ain't complaining. ✈️
+With that in mind, an interesting takeaway I got from running this was with American Airlines' long haul presence from LAX (Los Angeles). The map showed that in July 2019, the last summer before COVID, American flew from LAX to nine long haul destinations, but in July 2025, years after the effects of the pandemic had settled, American trimmed that down to just three: London/Heathrow, Sydney, and Tokyo/Haneda. (But let's be honest, something like that was bound to happen to an airline that [decided to shave nearly half of its widebody fleet during COVID](https://viewfromthewing.com/american-retired-40-of-its-long-haul-planes-during-covid-many-are-now-headed-to-a-new-airline/). However, American's oneworld alliance partners continue to operate some of those routes, and given how phenomenal they are, I ain't complaining.) ✈️
 
 **Try the AeroEvolve Visualizer out with your home airport to discover where you used to be able to go, and where you could go today, with just one flight!**
 
@@ -50,7 +48,7 @@ venv\Scripts\activate
 # On Windows (PowerShell):
 .\venv\Scripts\Activate.ps1
 ```
-3. Install the dependencies (you don't need to download the datasets themselves as I've already included the final ones in the repo):
+3. Install the dependencies (you don't need to download the data tables themselves as I've already included the final ones in the repo):
 ```bash
 pip install -r requirements.txt
 ```
@@ -61,7 +59,7 @@ python main.py
 
 ## Data Source
 
-I got data from the Bureau of Transportation Statistics (BTS), a part of the U.S. Department of Transportation. Airlines report their traffic data to the BTS each month.
+I downloaded data from the Bureau of Transportation Statistics (BTS), a part of the U.S. Department of Transportation. Airlines report their traffic data to the BTS each month.
 
 - [BTS T-100 Segment (All Carriers) table from 1990 to 2025](https://www.transtats.bts.gov/DatabaseInfo.asp?QO_VQ=EEE) with DEPARTURES_PERFORMED, PASSENGERS, UNIQUE_CARRIER, UNIQUE_CARRIER_NAME, ORIGIN, ORIGIN_CITY_NAME, ORIGIN_COUNTRY_NAME, DEST, DEST_CITY_NAME, DEST_COUNTRY_NAME, YEAR, MONTH, CLASS fields (to identify nonstop flights, the airlines that operated them, and the months and years of operation)
 

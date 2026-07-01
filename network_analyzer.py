@@ -275,7 +275,7 @@ class NetworkAnalyzer:
                 ),
                 # Div for bottom data source note
                 html.Div(
-                    "Based on Bureau of Transportation Statistics (BTS) T-100 Segment (All Carriers) tables. If the origin airport is not in the U.S., only routes to the U.S. will be shown.",
+                    "Source: Bureau of Transportation Statistics (BTS). If the origin airport is not in the U.S., only routes to the U.S. will be shown.",
                     style={
                         "fontSize": "18px",
                         "color": "#A7A9AC",
