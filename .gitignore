@@ -208,6 +208,3 @@ __marimo__/
 
 # Ignore Mac system junk
 .DS_Store
-
-# Ignore T-100s
-raw_T100_tables/*.csv
