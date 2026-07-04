@@ -249,7 +249,7 @@ class NetworkAnalyzer:
                             "width": "100%",
                         },
                     ),
-                    style={"flex": "9"},
+                    style={"flex": "3"},
                 ),
                 # Div for slider
                 html.Div(
@@ -270,7 +270,6 @@ class NetworkAnalyzer:
                     ),
                     style={
                         "flex": "1",
-                        "paddingTop": "20px",
                     },
                 ),
                 # Div for bottom data source note
