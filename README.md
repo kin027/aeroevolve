@@ -2,7 +2,7 @@
 
 ## Overview
 
-A Python tool that analyzes 1990-2025 Bureau of Transportation Statistics (BTS) data to visualize the evolution of airline route networks over time.
+A Python tool that analyzes 1990-2026 Bureau of Transportation Statistics (BTS) data to visualize the evolution of airline route networks over time.
 
 ### Why I Built This
 
@@ -90,17 +90,15 @@ I downloaded data from the Bureau of Transportation Statistics (BTS), a part of 
 
 - threading (to allow concurrent execution)
 
-- math (to calculate square roots for square root scaling of lines)
-
 ## Limitations
 
 - The data is not real-time; it comes from BTS data tables that the government releases only once a quarter (with a three-month delay).
-  - But I can get 2026 data when it's available and immediately visualize the important stuff that happened this year, like Alaska going intercontinental and Spirit going belly-up (RIP Spirit).
+  - But I can easily download the most recent T-100s when they're available and immediately visualize the important stuff that happened in 2026, like Alaska going intercontinental and Spirit going belly-up (RIP Spirit).
 - Routes that do not touch the U.S. are excluded because the T-100 tables only include routes that start or end somewhere in the U.S.
 
 ## Future Improvement Plans
 
-- Adjusting line thickness based on seats available
+- ~~Adjusting line width based on seats available~~ (Implemented!)
 
 - When All Carriers is selected, color-coding the lines based on the number of carriers operating that route.
 

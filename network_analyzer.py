@@ -8,7 +8,6 @@ import plotly.graph_objects as go
 import calendar
 import webview
 import threading
-import math
 
 TITLE = "AeroEvolve"
 
@@ -78,8 +77,6 @@ class NetworkAnalyzer:
 
         # Set the final result to self.T100_Df
         self.T100_df = T100_df
-
-        print(self.T100_df.shape)
 
         # Set self.timeline
         temp_df = self.T100_df.drop_duplicates(subset=["YEAR", "MONTH"])
@@ -289,7 +286,11 @@ class NetworkAnalyzer:
                 ),
                 # Div for bottom data source note
                 html.Div(
-                    "Source: Bureau of Transportation Statistics (BTS). If the origin airport is not in the U.S., only routes to the U.S. will be shown.",
+                    [
+                        "Source: Bureau of Transportation Statistics (BTS).",
+                        html.Br(),
+                        "Line width reflects capacity (seats available) during a given month on a square root scale. If the origin airport is not in the U.S., only routes to the U.S. will be shown.",
+                    ],
                     style={
                         "fontSize": "18px",
                         "color": "#A7A9AC",
@@ -326,7 +327,7 @@ class NetworkAnalyzer:
             self.airports_df["iata_code"] == self.origin_airport, "longitude_deg"
         ].values[0]
         MIN_LINE_WIDTH = 1
-        MAX_LINE_WIDTH = 9
+        MAX_LINE_WIDTH = 15
 
         # Get year and month from timeline position
         target_year, target_month, target_month_name = self.timeline[slider_position]
@@ -401,7 +402,7 @@ class NetworkAnalyzer:
 
                 # Calculate line width using square root scaling
                 line_width = MIN_LINE_WIDTH + (
-                    math.sqrt(float(seats)) / math.sqrt(float(self.global_max_seats))
+                    (seats ** (1 / 2)) / (self.global_max_seats ** (1 / 2))
                 ) * (MAX_LINE_WIDTH - MIN_LINE_WIDTH)
 
                 # Set route.line.width to line_width
