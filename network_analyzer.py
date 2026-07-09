@@ -8,6 +8,7 @@ import plotly.graph_objects as go
 import calendar
 import webview
 import threading
+import math
 
 TITLE = "AeroEvolve"
 
@@ -25,6 +26,7 @@ class NetworkAnalyzer:
         # Attributes to be filled out in later methods
         self.airline = None
         self.origin_airport = None
+        self.global_max_seats = None
         self.T100_df = pd.DataFrame()
         self.airports_df = pd.read_csv(self.airports_csv_path)
 
@@ -38,7 +40,6 @@ class NetworkAnalyzer:
 
     # Method to all T-100 CSVs and store dataframes in attributes
     def read_T100_csvs(self):
-        # T-100 fields are DepPerformed, Passengers, UniqueCarrier, UniqueCarrierName, Origin, OriginCityName, OriginCountryName, Dest, DestCityName, DestCountryName, Year, Month, Class
 
         # Create temporary loading window
         loading_win = Toplevel(self.window)
@@ -77,6 +78,8 @@ class NetworkAnalyzer:
 
         # Set the final result to self.T100_Df
         self.T100_df = T100_df
+
+        print(self.T100_df.shape)
 
         # Set self.timeline
         temp_df = self.T100_df.drop_duplicates(subset=["YEAR", "MONTH"])
@@ -135,24 +138,36 @@ class NetworkAnalyzer:
     def analyze_routes(self):
         # Clean self.T100_df
 
+        # T-100 fields are DepPerformed, Seats, UniqueCarrierName, Origin, OriginCityName, Dest, DestCityName, Year, Month, Class
+
         # Drop NA values
         self.T100_df = self.T100_df.dropna()
 
         # Filter T-100 so that DEPARTURES_PERFORMED > 4 (at least once a week frequency on average, exclude diversions, etc.)
         self.T100_df = self.T100_df[self.T100_df["DEPARTURES_PERFORMED"] > 4]
 
-        # Filter T-100 so that PASSENGERS > 0 (exclude cargo)
-        self.T100_df = self.T100_df[self.T100_df["PASSENGERS"] > 0]
+        # Filter T-100 so that SEATS > 0 (exclude cargo)
+        self.T100_df = self.T100_df[self.T100_df["SEATS"] > 0]
 
         # Filter T-100 so that CLASS is "F" (Scheduled Passenger/ Cargo Service F) (exclude non-scheduled flights)
         self.T100_df = self.T100_df[self.T100_df["CLASS"] == "F"]
 
+        # Create temporary copy of self.T100_df and group by unique route and unique month
+        global_max_seats_df = (
+            self.T100_df.groupby(["YEAR", "MONTH", "ORIGIN", "DEST"])["SEATS"]
+            .sum()
+            .reset_index()
+        )
+
+        # Set self.global_max_seats to maximum value in SEATS field of global_max_seats_df
+        self.global_max_seats = global_max_seats_df["SEATS"].max()
+
         # Filter T-100 so that ORIGIN is self.origin_airport
         self.T100_df = self.T100_df[self.T100_df["ORIGIN"] == self.origin_airport]
 
-        # Drop duplicates by UNIQUE_CARRIER, DEST, MONTH, and YEAR
+        # Drop duplicates by UNIQUE_CARRIER_NAME, DEST, MONTH, and YEAR
         self.T100_df = self.T100_df.drop_duplicates(
-            subset=["UNIQUE_CARRIER", "DEST", "MONTH", "YEAR"]
+            subset=["UNIQUE_CARRIER_NAME", "DEST", "MONTH", "YEAR"]
         )
 
         # Sort all_past_T100_df by recency in descending order
@@ -310,11 +325,13 @@ class NetworkAnalyzer:
         ORIGIN_LON = self.airports_df.loc[
             self.airports_df["iata_code"] == self.origin_airport, "longitude_deg"
         ].values[0]
+        MIN_LINE_WIDTH = 1
+        MAX_LINE_WIDTH = 9
 
         # Get year and month from timeline position
         target_year, target_month, target_month_name = self.timeline[slider_position]
 
-        # Filter self.T00_df by year and month, put into new df
+        # Create dest_df, which is source of info for all routes and is filtered by month and year
         dest_df = self.T100_df[
             (self.T100_df["YEAR"] == target_year)
             & (self.T100_df["MONTH"] == target_month)
@@ -323,7 +340,7 @@ class NetworkAnalyzer:
         # Copy dest_df to create origin_df
         origin_df = dest_df.copy()
 
-        # Change the coordinates to match that of the origin airport
+        # Change the coordinates in origin_df to match that of the origin airport
         origin_df["LAT"] = ORIGIN_LAT
         origin_df["LON"] = ORIGIN_LON
 
@@ -333,10 +350,10 @@ class NetworkAnalyzer:
         # Apply odd index to dest_df
         dest_df.index = range(1, len(dest_df) * 2, 2)
 
-        # Concat origin_df and dest_df
+        # Create routes_df, which is exclusively used for plotting routes
         routes_df = pd.concat([origin_df, dest_df])
 
-        # Create a new column "ALL_CARRIERS" to deal with duplication of lines due to multiple airlines operating the same route
+        # Create a new column "ALL_CARRIERS" to deal with duplication of lines due to multiple airlines operating the same route, and sum SEATS by route
         dest_df = (
             dest_df.groupby(
                 [
@@ -346,9 +363,15 @@ class NetworkAnalyzer:
                     "DEST",
                     "DEST_CITY_NAME",
                 ]
-            )["UNIQUE_CARRIER_NAME"]
-            .apply(lambda x: ", ".join(sorted(x.unique())))
-            .reset_index(name="ALL_CARRIERS")
+            )
+            .agg(
+                ALL_CARRIERS=(
+                    "UNIQUE_CARRIER_NAME",
+                    lambda x: ", ".join(sorted(x.unique())),
+                ),
+                SEATS=("SEATS", "sum"),
+            )
+            .reset_index()
         )
 
         # Create base map
@@ -365,12 +388,29 @@ class NetworkAnalyzer:
                 lat="LAT",
                 lon="LON",
                 line_group="ROUTE",
+                color="ROUTE",
             )
-            routes_map.update_traces(
-                line=dict(color=DEST_COLOR),
-                hoverinfo="none",
-            )
+
+            # From dest_df, create a dictionary of just ROUTE and SEATS to be used in for loop below
+            seats_dict = dest_df.set_index("ROUTE")["SEATS"].to_dict()
+
+            # Display line for each route
             for route in routes_map.data:
+                # Use route to look up seats in seats_dict
+                seats = seats_dict.get(route.name.replace("ROUTE=", ""), 0)
+
+                # Calculate line width using square root scaling
+                line_width = MIN_LINE_WIDTH + (
+                    math.sqrt(float(seats)) / math.sqrt(float(self.global_max_seats))
+                ) * (MAX_LINE_WIDTH - MIN_LINE_WIDTH)
+
+                # Set route.line.width to line_width
+                route.line = dict(color=DEST_COLOR, width=line_width)
+
+                # Hide legend
+                route.showlegend = False
+
+                # Display line
                 display_map.add_trace(route)
 
             # Create trace for destination airports
@@ -388,12 +428,13 @@ class NetworkAnalyzer:
                     ),
                     showlegend=False,
                     customdata=dest_df[
-                        ["DEST", "DEST_CITY_NAME", "ALL_CARRIERS"]
+                        ["DEST", "DEST_CITY_NAME", "ALL_CARRIERS", "SEATS"]
                     ].values,
                     hovertemplate=(
                         "Destination Airport: %{customdata[0]}<br>"
                         "Destination City: %{customdata[1]}<br>"
-                        "Carrier(s): %{customdata[2]}<extra></extra>"
+                        "Carrier(s): %{customdata[2]}<br>"
+                        "Seats Available: %{customdata[3]}<extra></extra>"
                     ),
                     hoverlabel=dict(
                         bgcolor=DEST_COLOR,
