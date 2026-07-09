@@ -26,7 +26,7 @@ class NetworkAnalyzer:
         self.airline = None
         self.origin_airport = None
         self.global_max_seats = None
-        self.T100_df = pd.DataFrame()
+        self.original_T100_df = pd.DataFrame()
         self.airports_df = pd.read_csv(self.airports_csv_path)
 
         # Airline filtering box
@@ -37,7 +37,7 @@ class NetworkAnalyzer:
         self.app = Dash(__name__)
         self.timeline = []
 
-    # Method to all T-100 CSVs and store dataframes in attributes
+    # Method to read all T-100 CSVs and perform basic data cleaning
     def read_T100_csvs(self):
 
         # Create temporary loading window
@@ -69,21 +69,45 @@ class NetworkAnalyzer:
         # Read each T-100 CSV and store each into an array
         temp_dfs = [pd.read_csv(folder_path / file) for file in files]
 
-        # Concatenate the list into self.T100_df
+        # Concatenate each df into one large df
         T100_df = pd.concat(temp_dfs, ignore_index=True)
+
+        # Perform basic data cleaning
+
+        # Drop NA values
+        T100_df = T100_df.dropna()
+
+        # Filter T-100 so that DEPARTURES_PERFORMED > 4 (at least once a week frequency on average, exclude diversions, etc.)
+        T100_df = T100_df[T100_df["DEPARTURES_PERFORMED"] > 4]
+
+        # Filter T-100 so that SEATS > 0 (exclude cargo)
+        T100_df = T100_df[T100_df["SEATS"] > 0]
+
+        # Filter T-100 so that CLASS is "F" (Scheduled Passenger/ Cargo Service F) (exclude non-scheduled flights)
+        T100_df = T100_df[T100_df["CLASS"] == "F"]
 
         # Create mew MONTH_NAME field for month name
         T100_df["MONTH_NAME"] = T100_df["MONTH"].map(lambda x: calendar.month_name[x])
 
-        # Set the final result to self.T100_Df
-        self.T100_df = T100_df
-
         # Set self.timeline
-        temp_df = self.T100_df.drop_duplicates(subset=["YEAR", "MONTH"])
+        temp_df = T100_df.drop_duplicates(subset=["YEAR", "MONTH"])
         temp_df = temp_df.sort_values(by=["YEAR", "MONTH"], ascending=True)
         self.timeline = [
             (row.YEAR, row.MONTH, row.MONTH_NAME) for row in temp_df.itertuples()
         ]
+
+        # Set the final result
+        self.original_T100_df = T100_df
+
+        # Create temporary copy and group by unique route and unique month
+        global_max_seats_df = (
+            T100_df.groupby(["YEAR", "MONTH", "ORIGIN", "DEST"])["SEATS"]
+            .sum()
+            .reset_index()
+        )
+
+        # Set self.global_max_seats to maximum value in SEATS field of global_max_seats_df
+        self.global_max_seats = global_max_seats_df["SEATS"].max()
 
     # Method for button clicked when user selects an airline
     def button_clicked(self):
@@ -99,6 +123,8 @@ class NetworkAnalyzer:
 
     # Method to get and validate airport code from user
     def get_user_selections(self):
+        result = None
+
         # Ask user for airport code
         origin_airport = simpledialog.askstring(
             title=TITLE,
@@ -109,18 +135,15 @@ class NetworkAnalyzer:
             # Convert user input to uppercase
             origin_airport = origin_airport.upper()
 
-            # Call self.read_T100_csvs()
-            self.read_T100_csvs()
-
             # Get a set of valid origin airport codes
-            valid_origin_airports = set(self.T100_df["ORIGIN"].unique())
+            valid_origin_airports = set(self.original_T100_df["ORIGIN"].unique())
 
             # Validate user-entered origin airport
             if origin_airport in valid_origin_airports:  # Valid airport
                 # Set origin_airport attribute to result
                 self.origin_airport = origin_airport
 
-                return True
+                result = "VALID"
             else:  # Invalid airport
                 # Display message box for error message
                 messagebox.showerror(
@@ -128,69 +151,27 @@ class NetworkAnalyzer:
                     "air service to the U.S. since 1990.",
                     title=TITLE,
                 )
-                return False
-        else:
-            return False
+                result = "INVALID"
+        else:  # No response
+            result = "EXIT"
 
+        return result
+
+    # Method to filter a copy of self.original_T100_df based on user selections
     def analyze_routes(self):
-        # Clean self.T100_df
-
         # T-100 fields are DepPerformed, Seats, UniqueCarrierName, Origin, OriginCityName, Dest, DestCityName, Year, Month, Class
 
-        # Drop NA values
-        self.T100_df = self.T100_df.dropna()
-
-        # Filter T-100 so that DEPARTURES_PERFORMED > 4 (at least once a week frequency on average, exclude diversions, etc.)
-        self.T100_df = self.T100_df[self.T100_df["DEPARTURES_PERFORMED"] > 4]
-
-        # Filter T-100 so that SEATS > 0 (exclude cargo)
-        self.T100_df = self.T100_df[self.T100_df["SEATS"] > 0]
-
-        # Filter T-100 so that CLASS is "F" (Scheduled Passenger/ Cargo Service F) (exclude non-scheduled flights)
-        self.T100_df = self.T100_df[self.T100_df["CLASS"] == "F"]
-
-        # Create temporary copy of self.T100_df and group by unique route and unique month
-        global_max_seats_df = (
-            self.T100_df.groupby(["YEAR", "MONTH", "ORIGIN", "DEST"])["SEATS"]
-            .sum()
-            .reset_index()
-        )
-
-        # Set self.global_max_seats to maximum value in SEATS field of global_max_seats_df
-        self.global_max_seats = global_max_seats_df["SEATS"].max()
+        # Create copy of original T-100 df
+        self.copy_T100_df = self.original_T100_df.copy()
 
         # Filter T-100 so that ORIGIN is self.origin_airport
-        self.T100_df = self.T100_df[self.T100_df["ORIGIN"] == self.origin_airport]
-
-        # Drop duplicates by UNIQUE_CARRIER_NAME, DEST, MONTH, and YEAR
-        self.T100_df = self.T100_df.drop_duplicates(
-            subset=["UNIQUE_CARRIER_NAME", "DEST", "MONTH", "YEAR"]
-        )
-
-        # Sort all_past_T100_df by recency in descending order
-        self.T100_df = self.T100_df.sort_values(
-            by=["YEAR", "MONTH"], ascending=[False, False]
-        )
-
-        # Merge iata_code field in airports_df with DEST field airport code in all_past_T100_df for destination airport codes
-        self.T100_df = self.T100_df.merge(
-            right=self.airports_df[["iata_code", "latitude_deg", "longitude_deg"]],
-            how="left",
-            left_on="DEST",
-            right_on="iata_code",
-        ).drop(columns="iata_code")
-
-        # Rename coordinate columns
-        self.T100_df = self.T100_df.rename(
-            columns={"latitude_deg": "LAT", "longitude_deg": "LON"}
-        )
-
-        # Create new column for ROUTE (e.g. DFW-HND)
-        self.T100_df["ROUTE"] = self.T100_df["ORIGIN"] + "-" + self.T100_df["DEST"]
+        self.copy_T100_df = self.copy_T100_df[
+            self.copy_T100_df["ORIGIN"] == self.origin_airport
+        ]
 
         # Ask user for specific airline to filter it down to
         airlines = (
-            self.T100_df["UNIQUE_CARRIER_NAME"]
+            self.copy_T100_df["UNIQUE_CARRIER_NAME"]
             .sort_values(ascending=True)
             .unique()
             .tolist()
@@ -212,7 +193,9 @@ class NetworkAnalyzer:
 
         # Create menu dropdown
         OptionMenu(
-            self.airline_filter_selection_box, self.airline_filter_selection, *airlines
+            self.airline_filter_selection_box,
+            self.airline_filter_selection,
+            *airlines,
         ).grid(column=0, row=1)
 
         # Create menu button
@@ -228,16 +211,35 @@ class NetworkAnalyzer:
         self.window.wait_window(self.airline_filter_selection_box)
         self.window.update()
 
-        # If self.airline is not All Carriers:
+        # If user selected to filter by airline:
         if self.airline != "All Carriers":
-            # Filter self_T100_df by user-selected airline
-            self.T100_df = self.T100_df[
-                self.T100_df["UNIQUE_CARRIER_NAME"] == self.airline
+            # Filter by self.airline
+            self.copy_T100_df = self.copy_T100_df[
+                self.copy_T100_df["UNIQUE_CARRIER_NAME"] == self.airline
             ]
 
-        # Build map layout
-        self.app.layout = self.build_layout()
-        self.register_callbacks()
+        # Sort by recency in descending order
+        self.copy_T100_df = self.copy_T100_df.sort_values(
+            by=["YEAR", "MONTH"], ascending=[False, False]
+        )
+
+        # Get columns for airport coordinates
+        self.copy_T100_df = self.copy_T100_df.merge(
+            right=self.airports_df[["iata_code", "latitude_deg", "longitude_deg"]],
+            how="left",
+            left_on="DEST",
+            right_on="iata_code",
+        ).drop(columns="iata_code")
+
+        # Rename coordinate columns
+        self.copy_T100_df = self.copy_T100_df.rename(
+            columns={"latitude_deg": "LAT", "longitude_deg": "LON"}
+        )
+
+        # Create new column for ROUTE (e.g. DFW-HND)
+        self.copy_T100_df["ROUTE"] = (
+            self.copy_T100_df["ORIGIN"] + "-" + self.copy_T100_df["DEST"]
+        )
 
     # Method to construct and return layout tree
     def build_layout(self):
@@ -302,7 +304,7 @@ class NetworkAnalyzer:
             ],
         )
 
-    # Method to update map whenever the slider is moved
+    # Method to update map whenever slider is moved
     def register_callbacks(self):
         @self.app.callback(
             Output("map", "figure"),
@@ -327,53 +329,16 @@ class NetworkAnalyzer:
             self.airports_df["iata_code"] == self.origin_airport, "longitude_deg"
         ].values[0]
         MIN_LINE_WIDTH = 1
-        MAX_LINE_WIDTH = 15
+        MAX_LINE_WIDTH = 10
 
         # Get year and month from timeline position
         target_year, target_month, target_month_name = self.timeline[slider_position]
 
         # Create dest_df, which is source of info for all routes and is filtered by month and year
-        dest_df = self.T100_df[
-            (self.T100_df["YEAR"] == target_year)
-            & (self.T100_df["MONTH"] == target_month)
+        dest_df = self.copy_T100_df[
+            (self.copy_T100_df["YEAR"] == target_year)
+            & (self.copy_T100_df["MONTH"] == target_month)
         ].copy()
-
-        # Copy dest_df to create origin_df
-        origin_df = dest_df.copy()
-
-        # Change the coordinates in origin_df to match that of the origin airport
-        origin_df["LAT"] = ORIGIN_LAT
-        origin_df["LON"] = ORIGIN_LON
-
-        # Apply even index to origin_df
-        origin_df.index = range(0, len(origin_df) * 2, 2)
-
-        # Apply odd index to dest_df
-        dest_df.index = range(1, len(dest_df) * 2, 2)
-
-        # Create routes_df, which is exclusively used for plotting routes
-        routes_df = pd.concat([origin_df, dest_df])
-
-        # Create a new column "ALL_CARRIERS" to deal with duplication of lines due to multiple airlines operating the same route, and sum SEATS by route
-        dest_df = (
-            dest_df.groupby(
-                [
-                    "ROUTE",
-                    "LAT",
-                    "LON",
-                    "DEST",
-                    "DEST_CITY_NAME",
-                ]
-            )
-            .agg(
-                ALL_CARRIERS=(
-                    "UNIQUE_CARRIER_NAME",
-                    lambda x: ", ".join(sorted(x.unique())),
-                ),
-                SEATS=("SEATS", "sum"),
-            )
-            .reset_index()
-        )
 
         # Create base map
         display_map = px.line_geo(
@@ -381,8 +346,44 @@ class NetworkAnalyzer:
             projection="natural earth",
         )
 
-        # If there are routes to display
-        if not routes_df.empty:
+        if not dest_df.empty:
+            # Copy dest_df to create origin_df
+            origin_df = dest_df.copy()
+
+            # Change the coordinates in origin_df to match that of the origin airport
+            origin_df["LAT"] = ORIGIN_LAT
+            origin_df["LON"] = ORIGIN_LON
+
+            # Apply even index to origin_df
+            origin_df.index = range(0, len(origin_df) * 2, 2)
+
+            # Apply odd index to dest_df
+            dest_df.index = range(1, len(dest_df) * 2, 2)
+
+            # Create routes_df, which is exclusively used for plotting routes
+            routes_df = pd.concat([origin_df, dest_df])
+
+            # Create a new column "ALL_CARRIERS" to deal with duplication of lines due to multiple airlines operating the same route, and sum SEATS by route
+            dest_df = (
+                dest_df.groupby(
+                    [
+                        "ROUTE",
+                        "LAT",
+                        "LON",
+                        "DEST",
+                        "DEST_CITY_NAME",
+                    ]
+                )
+                .agg(
+                    ALL_CARRIERS=(
+                        "UNIQUE_CARRIER_NAME",
+                        lambda x: ", ".join(sorted(x.unique())),
+                    ),
+                    SEATS=("SEATS", "sum"),
+                )
+                .reset_index()
+            )
+
             # Create trace for routes
             routes_map = px.line_geo(
                 data_frame=routes_df,
@@ -414,7 +415,7 @@ class NetworkAnalyzer:
                 # Display line
                 display_map.add_trace(route)
 
-            # Create trace for destination airports
+            # Create trace for destination airport labels and hover labels
             display_map.add_trace(
                 go.Scattergeo(
                     lat=dest_df["LAT"],
@@ -444,6 +445,11 @@ class NetworkAnalyzer:
                         font_size=HOVER_FONT_SIZE,
                     ),
                 )
+            )
+        else:  # No routes to display
+            # Create origin_df just so hovering over origin airport in map shows a city name
+            origin_df = pd.DataFrame(
+                [{"ORIGIN_CITY_NAME": self.copy_T100_df.loc[0, "ORIGIN_CITY_NAME"]}]
             )
 
         # Create trace for origin airport
@@ -488,27 +494,45 @@ class NetworkAnalyzer:
 
         return display_map
 
+    # Method to show the map
+    def show_map(self):
+        # Open Dash server
+        server_thread = threading.Thread(
+            target=self.app.run,
+            kwargs={"debug": False, "port": 8050, "use_reloader": False},
+            daemon=True,
+        )
+
+        server_thread.start()
+
+        # Show window for map
+        webview.create_window(title=TITLE, url="http://127.0.0.1:8050/", maximized=True)
+        webview.start()
+
     # Method to run all previous methods
     def run(self):
-        # Call get_user_selections method
-        if self.get_user_selections():
-            # Call analyze_routes method
-            self.analyze_routes()
+        # Read T-100s
+        self.read_T100_csvs()
 
-            # Open Dash server
-            server_thread = threading.Thread(
-                target=self.app.run,
-                kwargs={"debug": False, "port": 8050, "use_reloader": False},
-                daemon=True,
-            )
+        user_selection_result = ""
 
-            server_thread.start()
+        # While the result of the function has something
+        while user_selection_result != "EXIT":
+            # Call get_user_selections method
+            user_selection_result = self.get_user_selections()
 
-            # Show window for map
-            webview.create_window(
-                title=TITLE, url="http://127.0.0.1:8050/", maximized=True
-            )
-            webview.start()
+            if user_selection_result == "VALID":
+                # Analyze routes
+                self.analyze_routes()
+
+                # Build map layout
+                self.app.layout = self.build_layout()
+
+                # Update map whenever slider is moved
+                self.register_callbacks()
+
+                # Show map
+                self.show_map()
 
         # Destroy Tkinter window
         self.window.destroy()
