@@ -92,7 +92,7 @@ I downloaded data from the Bureau of Transportation Statistics (BTS), a part of 
 
 ## Limitations
 
-- The data is not real-time; it comes from BTS data tables that the government releases only once a quarter (with a three-month delay).
+- The data is not real-time; it comes from BTS data tables that the government releases monthly (with a three-month delay).
   - But I can easily download the most recent T-100s when they're available and immediately visualize the important stuff that happened in 2026, like Alaska going intercontinental and Spirit going belly-up (RIP Spirit).
 
 - Routes that do not touch the U.S. are excluded because the T-100 tables only include routes that start or end somewhere in the U.S.
