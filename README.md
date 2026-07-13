@@ -70,7 +70,7 @@ python main.py
 
 I downloaded data from the Bureau of Transportation Statistics (BTS), a part of the U.S. Department of Transportation. Airlines report their traffic data to the BTS each month.
 
-- [BTS T-100 Segment (All Carriers) table from 1990 to 2025](https://www.transtats.bts.gov/DatabaseInfo.asp?QO_VQ=EEE) with the DepPerformed, Seats, UniqueCarrierName, Origin, OriginCityName, Dest, DestCityName, Year, Month, and Class fields (to identify nonstop flights, the airlines that operated them, their capacities, and their periods of operation)
+- [BTS Air Carrier Statistics (Form 41 Traffic) - All Carriers (T-100) table](https://www.transtats.bts.gov/DatabaseInfo.asp?QO_VQ=EEE) from 1990 to 2026 with the DepPerformed, Seats, UniqueCarrierName, Origin, OriginCityName, Dest, DestCityName, Year, Month, and Class fields (to identify nonstop flights, the airlines that operated them, their capacities, and their periods of operation)
 
 ## Libraries Used
 
@@ -94,6 +94,7 @@ I downloaded data from the Bureau of Transportation Statistics (BTS), a part of 
 
 - The data is not real-time; it comes from BTS data tables that the government releases only once a quarter (with a three-month delay).
   - But I can easily download the most recent T-100s when they're available and immediately visualize the important stuff that happened in 2026, like Alaska going intercontinental and Spirit going belly-up (RIP Spirit).
+
 - Routes that do not touch the U.S. are excluded because the T-100 tables only include routes that start or end somewhere in the U.S.
 
 ## Future Improvement Plans
