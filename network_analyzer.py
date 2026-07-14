@@ -13,10 +13,9 @@ TITLE = "AeroEvolve"
 
 
 class NetworkAnalyzer:
-    def __init__(self, t100_folder_path, airports_csv_path):
+    def __init__(self, t100_folder_path, airports_path):
         # File path attributes
         self.folder_path = t100_folder_path
-        self.airports_csv_path = airports_csv_path
 
         # Tkinter window followed by withdrawal
         self.window = Tk()
@@ -26,8 +25,12 @@ class NetworkAnalyzer:
         self.airline = None
         self.origin_airport = None
         self.global_max_seats = None
-        self.original_T100_df = pd.DataFrame()
-        self.airports_df = pd.read_csv(self.airports_csv_path)
+        self.original_T100_df = None
+        self.copy_T100_df = None
+        self.airports_df = pd.read_csv(
+            airports_path,
+            usecols=["name", "iata_code", "latitude_deg", "longitude_deg"],
+        )
 
         # Airline filtering box
         self.airline_filter_selection_box = None
