@@ -24,12 +24,6 @@ But a bit of digging revealed that [Delta operated a transpacific gateway hub at
 
 Make sure you have Python 3.13 or higher installed.
 
-Note for Linux users: You may need to install Tkinter manually if it isn't included in your distro's default Python package:
-
-```bash
-sudo apt-get install python3-tk
-```
-
 1. Clone this repository:
 
 ```bash
