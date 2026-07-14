@@ -252,7 +252,6 @@ class NetworkAnalyzer:
                 "display": "flex",
                 "flexDirection": "column",
                 "height": "98vh",
-                "margin": "0",
                 "padding": "10px",
                 "fontFamily": "Helvetica",
             },
@@ -287,6 +286,9 @@ class NetworkAnalyzer:
                     ),
                     style={
                         "flex": "1",
+                        "paddingLeft": "50px",
+                        "paddingRight": "50px",
+                        "marginTop": "50px",
                     },
                 ),
                 # Div for bottom data source note
@@ -299,9 +301,8 @@ class NetworkAnalyzer:
                     style={
                         "fontSize": "18px",
                         "color": "#A7A9AC",
-                        "marginLeft": "10px",
-                        "marginBottom": "10px",
-                        "padding": "0px",
+                        "paddingBottom": "10px",
+                        "paddingLeft": "10px",
                     },
                 ),
             ],
