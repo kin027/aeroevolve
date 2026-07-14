@@ -70,7 +70,7 @@ python main.py
 
 I downloaded data from the Bureau of Transportation Statistics (BTS), a part of the U.S. Department of Transportation. Airlines report their traffic data to the BTS each month.
 
-- [BTS Air Carrier Statistics (Form 41 Traffic) - All Carriers (T-100) table](https://www.transtats.bts.gov/DatabaseInfo.asp?QO_VQ=EEE) from 1990 to 2026 with the DepPerformed, Seats, UniqueCarrierName, Origin, OriginCityName, Dest, DestCityName, Year, Month, and Class fields (to identify nonstop flights, the airlines that operated them, their capacities, and their periods of operation)
+- [BTS Air Carrier Statistics (Form 41 Traffic) T-100 Segment (All Carriers) table](https://www.transtats.bts.gov/DatabaseInfo.asp?QO_VQ=EEE) from 1990 to 2026 with the DepPerformed, Seats, UniqueCarrierName, Origin, OriginCityName, Dest, DestCityName, Year, Month, and Class fields (to identify nonstop flights, the airlines that operated them, their capacities, and their periods of operation)
 
 ## Libraries Used
 
