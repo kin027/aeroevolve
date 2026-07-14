@@ -514,11 +514,11 @@ class NetworkAnalyzer:
         # Read T-100s
         self.read_T100_csvs()
 
-        user_selection_result = ""
+        user_selection_result = None
 
         # While the result of the function has something
         while user_selection_result != "EXIT":
-            # Call get_user_selections method
+            # Get user selections
             user_selection_result = self.get_user_selections()
 
             if user_selection_result == "VALID":
