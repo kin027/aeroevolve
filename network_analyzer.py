@@ -80,13 +80,16 @@ class NetworkAnalyzer:
         # Drop NA values
         t100_df = t100_df.dropna()
 
-        # Filter T-100 so that DEPARTURES_PERFORMED > 4 (at least once a week frequency on average, exclude diversions, etc.)
-        t100_df = t100_df[t100_df["DEPARTURES_PERFORMED"] >= 4]
+        # Sum up departures performed and seats
+        t100_df = t100_df.groupby(['UNIQUE_CARRIER_NAME', 'ORIGIN', 'ORIGIN_CITY_NAME', 'DEST', 'DEST_CITY_NAME', 'YEAR', 'MONTH', 'CLASS'])[["DEPARTURES_PERFORMED", "SEATS"]].sum().reset_index()
 
-        # Filter T-100 so that SEATS > 0 (exclude cargo)
+        # Drop unscheduled flights
+        t100_df = t100_df[t100_df["DEPARTURES_PERFORMED"] >= 2]
+
+        # Drop non-cargo flights
         t100_df = t100_df[t100_df["SEATS"] > 0]
 
-        # Filter T-100 so that CLASS is "F" (Scheduled Passenger/ Cargo Service F) (exclude non-scheduled flights)
+        # Drop non-scheduled flights
         t100_df = t100_df[t100_df["CLASS"] == "F"]
 
         # Create mew MONTH_NAME field for month name
