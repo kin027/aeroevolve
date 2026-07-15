@@ -74,7 +74,7 @@ I downloaded data from the Bureau of Transportation Statistics (BTS), a part of 
 
 - dash (to make the map interactive with the slider)
 
-- pywebview (to open a new window to open the map)
+- pywebview (to open a new window to show the map in)
 
 - Tkinter (to create the GUI)
 

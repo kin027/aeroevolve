@@ -1,6 +1,6 @@
 from network_analyzer import NetworkAnalyzer
 
-T100_FOLDER_PATH = "T100_tables"
+T100_FOLDER_PATH = "t100_tables"
 AIRPORTS_PATH = "airports.csv"
 
 

@@ -75,13 +75,13 @@ class NetworkAnalyzer:
         # Concatenate each df into one large df
         t100_df = pd.concat(temp_dfs, ignore_index=True)
 
-        # Perform basic data cleaning
+        # Perform basic cleaning
 
         # Drop NA values
         t100_df = t100_df.dropna()
 
         # Filter T-100 so that DEPARTURES_PERFORMED > 4 (at least once a week frequency on average, exclude diversions, etc.)
-        t100_df = t100_df[t100_df["DEPARTURES_PERFORMED"] > 4]
+        t100_df = t100_df[t100_df["DEPARTURES_PERFORMED"] >= 4]
 
         # Filter T-100 so that SEATS > 0 (exclude cargo)
         t100_df = t100_df[t100_df["SEATS"] > 0]
