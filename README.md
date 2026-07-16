@@ -86,17 +86,20 @@ I downloaded data from the Bureau of Transportation Statistics (BTS), a part of 
 
 ## Limitations
 
-- The data is not real-time; it comes from BTS data tables that the government releases monthly (with a three-month delay).
-  - But I can easily download the most recent T-100s when they're available and immediately visualize the important stuff that happened in 2026, like Alaska going intercontinental and Spirit going belly-up (RIP Spirit).
+- The data is not real time because the BTS releases the T-100 tables with a three-month lag and in monthly increments
+  - But I can easily download the most recent T-100s when they're available and immediately visualize the important stuff that happened in 2026, like Alaska going intercontinental and Spirit going belly-up (RIP Spirit)
 
 - Routes that do not touch the U.S. are excluded because the T-100 tables only include routes that start or end somewhere in the U.S.
+
+- Cleaning the data for one-off unplanned "routes", such as diversions, is imperfect because the DepScheduled field the T-100 for all flights operated by foreign airlines is 0 even though their departures were definitely scheduled
+  - So I had to use the DepPerformed field instead
 
 ## Future Improvement Plans
 
 - ~~Adjusting line width based on seats available~~ (Implemented!)
 
-- When All Carriers is selected, color-coding the lines based on the number of carriers operating that route.
+- When All Carriers is selected, color-coding the lines based on the number of carriers operating that route
 
-- Formatting the slider better (e.g. with the tooltip).
+- Formatting the slider better (e.g. with the tooltip)
 
-- Preserving the map view when changing the month/year.
+- Preserving the map view when changing the month/year
