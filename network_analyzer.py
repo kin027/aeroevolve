@@ -13,9 +13,13 @@ TITLE = "AeroEvolve"
 
 
 class NetworkAnalyzer:
-    def __init__(self, t100_folder_path, airports_path):
-        # File path attributes
-        self.folder_path = t100_folder_path
+    def __init__(self, t100_path, airports_path):
+        # Original data attributes
+        self.original_t100_df = pd.read_parquet(t100_path)
+        self.airports_df = pd.read_csv(
+            airports_path,
+            usecols=["name", "iata_code", "latitude_deg", "longitude_deg"],
+        )
 
         # Tkinter window followed by withdrawal
         self.window = Tk()
@@ -24,13 +28,9 @@ class NetworkAnalyzer:
         # Attributes to be filled out in later methods
         self.airline = None
         self.origin_airport = None
+        self.valid_origin_airports = None
         self.global_max_seats = None
-        self.original_t100_df = None
         self.copy_t100_df = None
-        self.airports_df = pd.read_csv(
-            airports_path,
-            usecols=["name", "iata_code", "latitude_deg", "longitude_deg"],
-        )
 
         # Airline filtering box
         self.airline_filter_selection_box = None
@@ -41,8 +41,8 @@ class NetworkAnalyzer:
         self.register_callbacks()
         self.timeline = []
 
-    # Method to read all T-100 CSVs and perform basic data cleaning
-    def read_csvs(self):
+    # Method to clean the data
+    def clean_data(self):
         # Create temporary loading window
         loading_win = Toplevel(self.window)
         loading_win.title(TITLE)
@@ -60,60 +60,42 @@ class NetworkAnalyzer:
         # Close the window
         loading_win.destroy()
 
-        # Use Path to get all CSVs in self.folder_path
-        folder_path = Path(self.folder_path)
-
-        # Store all csv file names in a list
-        files = [file.name for file in folder_path.iterdir() if file.suffix == ".csv"]
-
-        # Sort that list into alphabetical order
-        files.sort()
-
-        # Read each T-100 CSV and store each into an array
-        temp_dfs = [pd.read_csv(folder_path / file) for file in files]
-
-        # Concatenate each df into one large df
-        t100_df = pd.concat(temp_dfs, ignore_index=True)
-
-        # Perform basic cleaning
+        # Clean T-100 table
 
         # Drop NA values
-        t100_df = t100_df.dropna()
+        self.original_t100_df = self.original_t100_df.dropna()
 
-        # Sum up departures performed and seats
-        t100_df = t100_df.groupby(['UNIQUE_CARRIER_NAME', 'ORIGIN', 'ORIGIN_CITY_NAME', 'DEST', 'DEST_CITY_NAME', 'YEAR', 'MONTH', 'CLASS'])[["DEPARTURES_PERFORMED", "SEATS"]].sum().reset_index()
+        # Drop unscheduled departures such as diversions
+        self.original_t100_df = self.original_t100_df[self.original_t100_df["DEPARTURES_PERFORMED"] >= 2]
 
-        # Drop unscheduled flights
-        t100_df = t100_df[t100_df["DEPARTURES_PERFORMED"] >= 2]
+        # Drop non-passenger flights
+        self.original_t100_df = self.original_t100_df[self.original_t100_df["SEATS"] > 0]
 
-        # Drop non-cargo flights
-        t100_df = t100_df[t100_df["SEATS"] > 0]
+        # Drop non-scheduled flights (Scheduled Passenger/ Cargo Service is F)
+        self.original_t100_df = self.original_t100_df[self.original_t100_df["CLASS"] == "F"]
 
-        # Drop non-scheduled flights
-        t100_df = t100_df[t100_df["CLASS"] == "F"]
-
-        # Create mew MONTH_NAME field for month name
-        t100_df["MONTH_NAME"] = t100_df["MONTH"].map(lambda x: calendar.month_name[x])
-
-        # Set self.timeline
-        temp_df = t100_df.drop_duplicates(subset=["YEAR", "MONTH"])
-        temp_df = temp_df.sort_values(by=["YEAR", "MONTH"], ascending=True)
-        self.timeline = [
-            (row.YEAR, row.MONTH, row.MONTH_NAME) for row in temp_df.itertuples()
-        ]
-
-        # Set the final result
-        self.original_t100_df = t100_df
+        # Get a set of valid origin airport codes
+        self.valid_origin_airports = set(self.original_t100_df["ORIGIN"].unique())
 
         # Create temporary copy and group by unique route and unique month
         global_max_seats_df = (
-            t100_df.groupby(["YEAR", "MONTH", "ORIGIN", "DEST"])["SEATS"]
+            self.original_t100_df.groupby(["YEAR", "MONTH", "ORIGIN", "DEST"])["SEATS"]
             .sum()
             .reset_index()
         )
 
         # Set self.global_max_seats to maximum value in SEATS field of global_max_seats_df
         self.global_max_seats = global_max_seats_df["SEATS"].max()
+
+        # Create mew MONTH_NAME field for month name
+        self.original_t100_df["MONTH_NAME"] = self.original_t100_df["MONTH"].map(lambda x: calendar.month_name[x])
+
+        # Set self.timeline
+        temp_df = self.original_t100_df.drop_duplicates(subset=["YEAR", "MONTH"])
+        temp_df = temp_df.sort_values(by=["YEAR", "MONTH"], ascending=True)
+        self.timeline = [
+            (row.YEAR, row.MONTH, row.MONTH_NAME) for row in temp_df.itertuples()
+        ]
 
     # Method for button clicked when user selects an airline
     def button_clicked(self):
@@ -141,11 +123,8 @@ class NetworkAnalyzer:
             # Convert user input to uppercase
             origin_airport = origin_airport.upper()
 
-            # Get a set of valid origin airport codes
-            valid_origin_airports = set(self.original_t100_df["ORIGIN"].unique())
-
             # Validate user-entered origin airport
-            if origin_airport in valid_origin_airports:  # Valid airport
+            if origin_airport in self.valid_origin_airports:  # Valid airport
                 # Set origin_airport attribute to result
                 self.origin_airport = origin_airport
 
@@ -165,15 +144,22 @@ class NetworkAnalyzer:
 
     # Method to filter a copy of self.original_t100_df based on user selections
     def analyze_routes(self):
-        # T-100 fields are DepPerformed, Seats, UniqueCarrierName, Origin, OriginCityName, Dest, DestCityName, Year, Month, Class
+        # T-100 columns are DepPerformed, Seats, UniqueCarrierName, Origin, OriginCityName, Dest, DestCityName, Year, Month, Class
 
         # Create copy of original T-100 df
         self.copy_t100_df = self.original_t100_df.copy()
+
+
 
         # Filter T-100 so that ORIGIN is self.origin_airport
         self.copy_t100_df = self.copy_t100_df[
             self.copy_t100_df["ORIGIN"] == self.origin_airport
         ]
+
+        # Sum up departures performed and seats
+        self.copy_t100_df = self.copy_t100_df.groupby(
+            ['UNIQUE_CARRIER_NAME', 'ORIGIN', 'ORIGIN_CITY_NAME', 'DEST', 'DEST_CITY_NAME', 'YEAR', 'MONTH', 'CLASS'])[
+            ["DEPARTURES_PERFORMED", "SEATS"]].sum().reset_index()
 
         # Ask user for specific airline to filter it down to
         airlines = (
@@ -518,8 +504,8 @@ class NetworkAnalyzer:
 
     # Method to run all previous methods
     def run(self):
-        # Read CSVs
-        self.read_csvs()
+        # Clean the data
+        self.clean_data()
 
         user_selection_result = None
 
