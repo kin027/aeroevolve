@@ -60,12 +60,6 @@ pip install -r requirements.txt
 python main.py
 ```
 
-## Data Source
-
-I downloaded data from the Bureau of Transportation Statistics (BTS), a part of the U.S. Department of Transportation. Airlines report their traffic data to the BTS each month.
-
-- [BTS Air Carrier Statistics (Form 41 Traffic) T-100 Segment (All Carriers) table](https://www.transtats.bts.gov/DatabaseInfo.asp?QO_VQ=EEE) from 1990 to 2026 with the DepPerformed, Seats, UniqueCarrierName, Origin, OriginCityName, Dest, DestCityName, Year, Month, and Class fields (to identify nonstop flights, the airlines that operated them, their capacities, and their periods of operation)
-
 ## Libraries Used
 
 - pandas (to analyze the T-100 tables)
@@ -84,15 +78,27 @@ I downloaded data from the Bureau of Transportation Statistics (BTS), a part of 
 
 - threading (to allow concurrent execution)
 
+## Data Source
+
+I downloaded data from the Bureau of Transportation Statistics (BTS), a part of the U.S. Department of Transportation. Airlines report their traffic data to the BTS each month.
+
+- [BTS Air Carrier Statistics (Form 41 Traffic) T-100 Segment (All Carriers) table](https://www.transtats.bts.gov/DatabaseInfo.asp?QO_VQ=EEE)
+  - Provides details on nonstop flights
+  - Released monthly with a 2-3 month lag to ensure data quality
+  - I included the DepPerformed, Seats, UniqueCarrierName, Origin, OriginCityName, Dest, DestCityName, Year, Month, and Class columns and used data from January 1990 to March 2026
+  - Over 13 million rows of data
+
 ## Limitations
 
-- The data is not real time because the BTS releases the T-100 tables with a three-month lag and in monthly increments
+- The data is not real time
+  - So my analysis represents a historical snapshot as opposed to active booking trends
   - But I can easily download the most recent T-100s when they're available and immediately visualize the important stuff that happened in 2026, like Alaska going intercontinental and Spirit going belly-up (RIP Spirit)
 
-- Routes that do not touch the U.S. are excluded because the T-100 tables only include routes that start or end somewhere in the U.S.
+- The T-100 tables include only routes that touch the U.S.
+  - So if a non-U.S. airport code is entered, only routes to the U.S. will be shown
 
 - Cleaning the data for one-off unplanned "routes", such as diversions, is imperfect because the DepScheduled field the T-100 for all flights operated by foreign airlines is 0 even though their departures were definitely scheduled
-  - So I had to use the DepPerformed field instead
+  - So some errors in routes may be present, which you can usually tell by a route with relatively few seats available shown on the map for only one month
 
 ## Future Improvement Plans
 
