@@ -149,12 +149,13 @@ class NetworkAnalyzer:
         # Create copy of original T-100 df
         self.copy_t100_df = self.original_t100_df.copy()
 
-
-
         # Filter T-100 so that ORIGIN is self.origin_airport
         self.copy_t100_df = self.copy_t100_df[
             self.copy_t100_df["ORIGIN"] == self.origin_airport
         ]
+
+        # Keep rows where DEST is not the origin airport
+        self.copy_t100_df = self.copy_t100_df[self.copy_t100_df["DEST"] != self.origin_airport]
 
         # Sum up departures performed and seats
         self.copy_t100_df = self.copy_t100_df.groupby(
