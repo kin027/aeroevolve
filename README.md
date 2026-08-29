@@ -85,7 +85,7 @@ I downloaded data from the Bureau of Transportation Statistics (BTS), a part of 
 - [BTS Air Carrier Statistics (Form 41 Traffic) T-100 Segment (All Carriers) table](https://www.transtats.bts.gov/DatabaseInfo.asp?QO_VQ=EEE)
   - Provides details on nonstop flights
   - Released monthly with a 2-3 month lag to ensure data quality
-  - I included the DepPerformed, Seats, UniqueCarrierName, Origin, OriginCityName, Dest, DestCityName, Year, Month, and Class columns and used data from January 1990 to March 2026
+  - I included the DepPerformed, Seats, UniqueCarrierName, Origin, OriginCityName, Dest, DestCityName, Year, Month, and Class columns and used data from January 1990 to May 2026
   - Over 13 million rows of data
 
 ## Limitations
