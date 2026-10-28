@@ -73,15 +73,11 @@ python main.py
 
 ## Limitations
 
-- The data is not real time
-  - So my analysis represents a historical snapshot as opposed to active booking trends
-  - But I can easily download the most recent T-100s when they're available and immediately visualize the important stuff that happened in 2026, like Alaska going intercontinental and Spirit going belly-up (RIP Spirit)
+- Cleaning the data for one-off unplanned "routes", such as diversions, is imperfect because the DepScheduled field the T-100 for all flights operated by foreign airlines is 0 even though their departures were definitely scheduled
+  - So some errors in routes may be present, which you can usually tell by a route with relatively few seats available shown on the map for only one month
 
 - The T-100 tables include only routes that touch the U.S.
   - So if a non-U.S. airport code is entered, only routes to the U.S. will be shown
-
-- Cleaning the data for one-off unplanned "routes", such as diversions, is imperfect because the DepScheduled field the T-100 for all flights operated by foreign airlines is 0 even though their departures were definitely scheduled
-  - So some errors in routes may be present, which you can usually tell by a route with relatively few seats available shown on the map for only one month
 
 ## Future Improvement Plans
 
