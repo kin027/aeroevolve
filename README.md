@@ -24,8 +24,8 @@ Have Python 3.13+ installed on your machine. You do not need to download any dat
 
 ```bash
 # Clone the repo
-git clone https://github.com/kin027/aeroeveolve.git
-cd aeroeveolve
+git clone https://github.com/kin027/aeroevolve.git
+cd aeroevolve
 
 # Create the virtual environment
 python -m venv venv
