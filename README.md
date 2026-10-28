@@ -67,7 +67,7 @@ python main.py
 ## Data Sources
 
 - [BTS, Air Carrier Statistics (Form 41 Traffic), T-100 Segment (All Carriers)](https://www.transtats.bts.gov/DatabaseInfo.asp?QO_VQ=EEE)
-  - Contains domestic and international airline market and segment data
+  - Contains domestic and international airline segment data
   - Released monthly with a 2-3 month lag
   - I used data from January 1990 to May 2026
 
