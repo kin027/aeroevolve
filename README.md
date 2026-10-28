@@ -64,7 +64,7 @@ python main.py
 
 - threading (to allow concurrent execution)
 
-## Data Source
+## Data Sources
 
 - [BTS, Air Carrier Statistics (Form 41 Traffic), T-100 Segment (All Carriers)](https://www.transtats.bts.gov/DatabaseInfo.asp?QO_VQ=EEE)
   - Contains domestic and international airline market and segment data
