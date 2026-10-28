@@ -1,4 +1,4 @@
-# AeroEvolve Visualizer
+# AeroEvolve
 
 ## Overview
 
@@ -18,45 +18,31 @@ Running this saves me from needing to comb through over 13 million rows of raw g
 
 But a bit of digging revealed that [Delta operated a transpacific gateway hub at PDX in the 90s](https://www.travelcodex.com/de-portland/), which would explain why they also ran flights to various airports in Japan at that time. Unfortunately, those days are long gone, and [Delta's 2024 handover of their Portland to Amsterdam route to their partner KLM](https://simpleflying.com/klm-replaces-delta-air-lines-from-amsterdam-portland/) officially marked the end of their long-haul operation out of PDX, meaning that Portland-based Delta loyalists must now take the short flight up to SEA and connect onto one of Delta's many long-haul services to get anywhere meaningful. Oh well, more MQSs (Medallion Qualifying Segments) for them. ✈️
 
-**Try the AeroEvolve Visualizer out with your home airport to discover where you used to be able to go, and where you could go today, with just one flight!**
-
 ## Getting Started
 
-Make sure you have Python 3.13 or higher installed.
-
-1. Clone this repository:
+Have Python 3.13+ installed on your machine. You do not need to download any data, as I've already included the relevant data in this repo.
 
 ```bash
-git clone https://github.com/kin027/aeroevolve.git
-cd aeroevolve
-```
+# Clone the repo
+git clone https://github.com/kin027/aeroeveolve.git
+cd aeroeveolve
 
-2. Create a virtual environment:
-
-```bash
-# Create the environment
+# Create the virtual environment
 python -m venv venv
 
-# Activate it:
-# On macOS and Linux:
+# Activate it on macOS and Linux
 source venv/bin/activate
 
-# On Windows (Command Prompt):
+# Activate it on Windows (Command Prompt)
 venv\Scripts\activate
 
-# On Windows (PowerShell):
+# Activate it on Windows (PowerShell)
 .\venv\Scripts\Activate.ps1
-```
 
-3. Install the dependencies (you don't need to download the data tables themselves as I've already included the final ones in the repo):
-
-```bash
+# Install dependencies
 pip install -r requirements.txt
-```
 
-4. Run the program!
-
-```bash
+# Run the program
 python main.py
 ```
 
@@ -80,13 +66,10 @@ python main.py
 
 ## Data Source
 
-I downloaded data from the Bureau of Transportation Statistics (BTS), a part of the U.S. Department of Transportation. Airlines report their traffic data to the BTS each month.
-
-- [BTS Air Carrier Statistics (Form 41 Traffic) T-100 Segment (All Carriers) table](https://www.transtats.bts.gov/DatabaseInfo.asp?QO_VQ=EEE)
-  - Provides details on nonstop flights
-  - Released monthly with a 2-3 month lag to ensure data quality
-  - I included the DepPerformed, Seats, UniqueCarrierName, Origin, OriginCityName, Dest, DestCityName, Year, Month, and Class columns and used data from January 1990 to May 2026
-  - Over 13 million rows of data
+- [BTS, Air Carrier Statistics (Form 41 Traffic), T-100 Segment (All Carriers)](https://www.transtats.bts.gov/DatabaseInfo.asp?QO_VQ=EEE)
+  - Contains domestic and international airline market and segment data
+  - Released monthly with a 2-3 month lag
+  - I used data from January 1990 to May 2026
 
 ## Limitations
 
